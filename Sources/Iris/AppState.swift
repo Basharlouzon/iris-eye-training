@@ -9,11 +9,17 @@ struct AlertItem: Identifiable, Codable, Equatable {
     var isRead = false
 }
 
+struct DayLog: Codable, Equatable {
+    var breaks: Int = 0
+    var exercises: Int = 0
+}
+
 @MainActor
 final class AppState: ObservableObject {
     static let shared = AppState()
 
     @Published private(set) var alerts: [AlertItem] = []
+    @Published private(set) var dailyLog: [String: DayLog] = [:]
     @Published var nextBreak: Date?
     @Published var restSecondsLeft: Int?
     @Published var breaksToday = 0
@@ -39,6 +45,7 @@ final class AppState: ObservableObject {
     private init() {
         loadAlerts()
         loadStats()
+        loadDailyLog()
         scheduler.attach(self)
         let minutes = defaults.object(forKey: SettingsKeys.breakInterval) == nil
             ? Double(RoutinePreset.balanced.focusMinutes)
@@ -130,6 +137,7 @@ final class AppState: ObservableObject {
                     self.restSecondsLeft = nil
                     self.breaksToday += 1
                     self.saveStats()
+                    self.bumpDailyLog(breaks: 1)
                     self.markAllBreakAlertsDone()
                     self.showFlash("Break complete ✓")
                     let minutes = self.defaults.object(forKey: SettingsKeys.breakInterval) == nil
@@ -163,6 +171,7 @@ final class AppState: ObservableObject {
     func incrementExercises() {
         exercisesToday += 1
         saveStats()
+        bumpDailyLog(exercises: 1)
         showFlash("Exercise complete ✓")
     }
 
@@ -183,6 +192,54 @@ final class AppState: ObservableObject {
     private func saveStats() {
         defaults.set(breaksToday, forKey: "stats.breaks")
         defaults.set(exercisesToday, forKey: "stats.exercises")
+    }
+
+    // MARK: - Daily history (real data for the Progress tab)
+
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private func loadDailyLog() {
+        if let data = defaults.data(forKey: "dailyLog.data"),
+           let decoded = try? JSONDecoder().decode([String: DayLog].self, from: data) {
+            dailyLog = decoded
+        }
+        // Seed today from restored stats so the log survives restarts.
+        let key = Self.dayFormatter.string(from: Date())
+        if dailyLog[key] == nil, breaksToday > 0 || exercisesToday > 0 {
+            dailyLog[key] = DayLog(breaks: breaksToday, exercises: exercisesToday)
+        }
+    }
+
+    private func bumpDailyLog(breaks: Int = 0, exercises: Int = 0) {
+        let key = Self.dayFormatter.string(from: Date())
+        var log = dailyLog[key] ?? DayLog()
+        log.breaks += breaks
+        log.exercises += exercises
+        dailyLog[key] = log
+        // Keep roughly a month of history.
+        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let cutoffKey = Self.dayFormatter.string(from: cutoff)
+        dailyLog = dailyLog.filter { $0.key >= cutoffKey }
+        if let data = try? JSONEncoder().encode(dailyLog) {
+            defaults.set(data, forKey: "dailyLog.data")
+        }
+    }
+
+    /// The last seven days, oldest first, for the Progress chart.
+    func lastSevenDays() -> [(label: String, breaks: Int, exercises: Int, isToday: Bool)] {
+        let cal = Calendar.current
+        let letters = ["S", "M", "T", "W", "T", "F", "S"]
+        return (0...6).map { offset in
+            let day = cal.date(byAdding: .day, value: offset - 6, to: Date())!
+            let key = Self.dayFormatter.string(from: day)
+            let log = dailyLog[key] ?? DayLog()
+            let label = letters[cal.component(.weekday, from: day) - 1]
+            return (label, log.breaks, log.exercises, offset == 6)
+        }
     }
 
     // MARK: - Flash

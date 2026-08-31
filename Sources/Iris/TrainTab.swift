@@ -238,9 +238,11 @@ private struct TrainPreview: View {
     var body: some View {
         ExercisePreviewCanvas(kind: session.selected.kind,
                               startedAt: session.startedAt,
+                              elapsedBase: session.accumulated,
                               loopSeconds: session.loopSeconds,
                               reversed: session.reversed,
-                              paused: !session.running)
+                              paused: !session.running,
+                              plain: true)
             .frame(height: 96)
     }
 }

@@ -115,11 +115,7 @@ final class TheaterController: ObservableObject {
 
     func togglePause() {
         guard isActive else { return }
-        if session.running {
-            session.stop()
-        } else {
-            session.start()
-        }
+        session.togglePause()
         showControls()
     }
 
@@ -245,6 +241,7 @@ struct TheaterView: View {
                     Spacer(minLength: geo.size.height * 0.08)
                     ExercisePreviewCanvas(kind: session.selected.kind,
                                           startedAt: session.startedAt,
+                                          elapsedBase: session.accumulated,
                                           loopSeconds: session.loopSeconds,
                                           reversed: session.reversed,
                                           paused: !session.running,
@@ -300,7 +297,7 @@ struct TheaterView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(Theme.secondary)
                     .frame(maxWidth: 380, alignment: .leading)
-                if !session.running && !session.justCompleted {
+                if session.isPaused {
                     Text("PAUSED")
                         .font(.system(size: 10, weight: .bold))
                         .tracking(1.2)
@@ -349,14 +346,13 @@ struct TheaterView: View {
     }
 
     private func segments(width: CGFloat) -> some View {
-        TimelineView(.periodic(from: .now, by: 0.5)) { timeline in
+        TimelineView(.periodic(from: .now, by: 0.5)) { _ in
             HStack(spacing: 6) {
                 ForEach(0..<stepCount, id: \.self) { i in
                     let fraction: Double = {
                         if i < session.queueIndex { return 1 }
                         if i > session.queueIndex { return 0 }
-                        guard let started = session.startedAt else { return session.justCompleted ? 1 : 0 }
-                        let elapsed = timeline.date.timeIntervalSince(started)
+                        let elapsed = session.currentElapsed
                         return min(1, max(0, elapsed / Double(max(1, session.duration))))
                     }()
                     Capsule()

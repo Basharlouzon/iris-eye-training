@@ -8,6 +8,9 @@ struct ExercisePreviewCanvas: View {
     let kind: Exercise.Kind
     // Session-driven playback (nil startedAt = ambient loop for library cards).
     var startedAt: Date? = nil
+    // Seconds completed before the current run — keeps the phase continuous
+    // across pause/resume.
+    var elapsedBase: Double = 0
     var loopSeconds: Double = 6
     var reversed: Bool = false
     var paused: Bool = false
@@ -36,7 +39,8 @@ struct ExercisePreviewCanvas: View {
             Canvas { context, size in
                 let phase: Double
                 if let startedAt {
-                    var p = timeline.date.timeIntervalSince(startedAt) / max(0.5, loopSeconds)
+                    let elapsed = elapsedBase + timeline.date.timeIntervalSince(startedAt)
+                    var p = elapsed / max(0.5, loopSeconds)
                     p = p.truncatingRemainder(dividingBy: 1)
                     if p < 0 { p += 1 }
                     phase = reversed ? 1 - p : p

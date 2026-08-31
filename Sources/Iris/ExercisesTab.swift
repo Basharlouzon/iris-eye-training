@@ -270,6 +270,14 @@ final class ExerciseSession: ObservableObject {
     @Published var justCompleted = false
     @Published private(set) var queue: [Exercise] = []
     @Published var queueIndex: Int = 0
+    @Published private(set) var isPaused = false
+
+    /// Seconds completed before a pause; resume continues from here.
+    private(set) var accumulated: TimeInterval = 0
+
+    var currentElapsed: TimeInterval {
+        accumulated + (startedAt.map { Date().timeIntervalSince($0) } ?? 0)
+    }
 
     /// Focus mode hooks this to auto-advance to the next step.
     var onStepComplete: (() -> Void)?
@@ -292,11 +300,51 @@ final class ExerciseSession: ObservableObject {
     }
 
     func start() {
-        guard !running else { return }
+        guard !running, !isPaused else { return }
         justCompleted = false
+        accumulated = 0
+        isPaused = false
         running = true
         startedAt = Date()
-        let t = Timer.scheduledTimer(withTimeInterval: TimeInterval(duration), repeats: false) { [weak self] _ in
+        scheduleFinish(after: TimeInterval(duration))
+    }
+
+    func pause() {
+        guard running, let started = startedAt else { return }
+        accumulated += Date().timeIntervalSince(started)
+        startedAt = nil
+        finishTimer?.invalidate()
+        finishTimer = nil
+        running = false
+        isPaused = true
+    }
+
+    /// Continues a paused step with its remaining time intact.
+    func resume() {
+        guard isPaused, !running else { return }
+        isPaused = false
+        running = true
+        startedAt = Date()
+        let remaining = TimeInterval(duration) - accumulated
+        if remaining <= 0.05 {
+            complete()
+        } else {
+            scheduleFinish(after: remaining)
+        }
+    }
+
+    func togglePause() {
+        if running {
+            pause()
+        } else if isPaused {
+            resume()
+        } else {
+            start()
+        }
+    }
+
+    private func scheduleFinish(after interval: TimeInterval) {
+        let t = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.complete() }
         }
         t.tolerance = 0.3
@@ -305,6 +353,8 @@ final class ExerciseSession: ObservableObject {
 
     func stop() {
         running = false
+        isPaused = false
+        accumulated = 0
         startedAt = nil
         finishTimer?.invalidate()
         finishTimer = nil
