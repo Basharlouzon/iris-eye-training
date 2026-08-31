@@ -49,8 +49,8 @@ final class NotchPanelController {
 
     static let panelWidth: CGFloat = 404
     static let expandedHeight: CGFloat = 540
-    static let lipHeight: CGFloat = 26
-    static let floatingPillHeight: CGFloat = 58
+    static let lipHeight: CGFloat = 20
+    static let floatingPillHeight: CGFloat = 44
 
     private init(state: AppState) {
         self.state = state
@@ -185,7 +185,8 @@ final class NotchPanelController {
                                height: height)
             return Geo(frame: frame, hasNotch: hasNotch, notchHeight: notchHeight)
         } else if hasNotch {
-            let width = notchWidth + 26
+            // Hug the notch: minimal overhang, short lip.
+            let width = notchWidth + 12
             let height = notchHeight + Self.lipHeight
             let frame = NSRect(x: centerX - width / 2,
                                y: f.maxY - height,
@@ -193,7 +194,7 @@ final class NotchPanelController {
                                height: height)
             return Geo(frame: frame, hasNotch: true, notchHeight: notchHeight)
         } else {
-            let width: CGFloat = 211
+            let width: CGFloat = 168
             let height = Self.floatingPillHeight
             let frame = NSRect(x: centerX - width / 2,
                                y: f.maxY - height - 6,

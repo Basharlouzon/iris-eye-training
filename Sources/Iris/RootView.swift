@@ -41,33 +41,43 @@ struct RootView: View {
         .ignoresSafeArea()
     }
 
+    /// Closed pill: pure black to merge with the hardware notch, no border
+    /// (a hairline over black reads as glass), tight radii and a whisper of
+    /// shadow under the lip. Expanded keeps the softer panel treatment.
+    @ViewBuilder
     private var panelShape: some View {
-        let bottomRadius: CGFloat = model.isExpanded ? 28 : 999
-        let topRadius: CGFloat = model.hasNotch ? 4 : bottomRadius
-
-        return UnevenRoundedRectangle(
-            topLeadingRadius: topRadius,
-            bottomLeadingRadius: bottomRadius,
-            bottomTrailingRadius: bottomRadius,
-            topTrailingRadius: topRadius,
-            style: .continuous
-        )
-        .fill(Theme.panel)
-        .overlay {
+        if model.isExpanded {
             UnevenRoundedRectangle(
-                topLeadingRadius: topRadius,
-                bottomLeadingRadius: bottomRadius,
-                bottomTrailingRadius: bottomRadius,
-                topTrailingRadius: topRadius,
+                topLeadingRadius: 6,
+                bottomLeadingRadius: 28,
+                bottomTrailingRadius: 28,
+                topTrailingRadius: 6,
                 style: .continuous
             )
-            .strokeBorder(Theme.stroke, lineWidth: 0.5)
+            .fill(Theme.panel)
+            .overlay {
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 6,
+                    bottomLeadingRadius: 28,
+                    bottomTrailingRadius: 28,
+                    topTrailingRadius: 6,
+                    style: .continuous
+                )
+                .strokeBorder(Theme.stroke, lineWidth: 0.5)
+            }
+            .shadow(color: .black.opacity(0.55), radius: 40, y: 18)
+        } else {
+            let radius: CGFloat = model.hasNotch ? 10 : 14
+            UnevenRoundedRectangle(
+                topLeadingRadius: model.hasNotch ? 2 : radius,
+                bottomLeadingRadius: radius,
+                bottomTrailingRadius: radius,
+                topTrailingRadius: model.hasNotch ? 2 : radius,
+                style: .continuous
+            )
+            .fill(Color.black)
+            .shadow(color: .black.opacity(0.20), radius: 4, y: 2)
         }
-        .shadow(
-            color: .black.opacity(model.isExpanded ? 0.55 : 0.32),
-            radius: model.isExpanded ? 40 : 14,
-            y: model.isExpanded ? 18 : 6
-        )
     }
 }
 
@@ -201,7 +211,7 @@ struct PillView: View {
 
         // Progress ring: fraction toward the next break, or remaining rest.
         let ring = ringSpec(for: presentation).map { spec in
-            CountdownRing(fraction: spec.fraction, color: spec.color, diameter: CGFloat(layout.signalDiameter) + 5.5)
+            CountdownRing(fraction: spec.fraction, color: spec.color, diameter: CGFloat(layout.signalDiameter) + 3)
         }
 
         return ZStack {
