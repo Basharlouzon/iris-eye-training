@@ -18,7 +18,7 @@ struct HomeTab: View {
         VStack(spacing: CGFloat(layout.spacing)) {
             alertsSection
 
-            HStack {
+            HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(greeting)
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
@@ -28,10 +28,13 @@ struct HomeTab: View {
                         .foregroundStyle(Theme.tertiary)
                 }
                 Spacer()
-                IrisStatusChip(
-                    label: progress.completedActions == 0 ? "Fresh start" : "\(progress.completedActions) actions",
-                    tone: .restorative
-                )
+                VStack(alignment: .trailing, spacing: 6) {
+                    IrisStatusChip(
+                        label: progress.completedActions == 0 ? "Fresh start" : "\(progress.completedActions) actions",
+                        tone: .restorative
+                    )
+                    musicChip
+                }
             }
             .frame(minHeight: CGFloat(layout.summaryHeight))
 
@@ -74,8 +77,61 @@ struct HomeTab: View {
                 }
             }
             .frame(minHeight: CGFloat(layout.contextHeight))
+        }
+    }
 
-            musicBar
+    /// Compact music control pinned at the top-right of Today.
+    @ViewBuilder
+    private var musicChip: some View {
+        if musicSupport {
+            if music.denied {
+                Button {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    Image(systemName: "hand.raised.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Theme.accent)
+                        .frame(width: 26, height: 26)
+                        .background(Theme.surfaceStrong, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Music access needed — open Automation settings")
+            } else if music.trackName != nil {
+                HStack(spacing: 6) {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Theme.accent)
+                    Text(music.trackName ?? "")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Theme.text)
+                        .lineLimit(1)
+                        .frame(maxWidth: 86, alignment: .leading)
+                    transportButton("backward.fill", 20) { music.previousTrack() }
+                    transportButton(music.isPlaying ? "pause.fill" : "play.fill", 24,
+                                    iconColor: .black, background: .white) { music.togglePlayPause() }
+                    transportButton("forward.fill", 20) { music.nextTrack() }
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Theme.surface))
+            } else {
+                Button {
+                    NSWorkspace.shared.openApplication(
+                        at: URL(fileURLWithPath: "/System/Applications/Music.app"),
+                        configuration: NSWorkspace.OpenConfiguration()
+                    )
+                } label: {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.secondary)
+                        .frame(width: 26, height: 26)
+                        .background(Theme.surfaceStrong, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Open Music")
+            }
         }
     }
 
@@ -124,77 +180,6 @@ struct HomeTab: View {
                                startPoint: .topLeading, endPoint: .bottomTrailing)
             )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
-    }
-
-    /// Music transport (reference 2) — always present when enabled; controls
-    /// appear once Music is playing.
-    @ViewBuilder
-    private var musicBar: some View {
-        if musicSupport {
-            HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(LinearGradient(colors: [Theme.gradientTop, Theme.gradientBottom],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Image(systemName: music.denied ? "hand.raised.fill" : "music.note")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.9))
-                    )
-                if music.denied {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Music access needed")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.text)
-                        Text("System Settings → Privacy & Security → Automation → allow Iris.")
-                            .font(.system(size: 9))
-                            .foregroundStyle(Theme.tertiary)
-                            .lineLimit(2)
-                    }
-                    Spacer(minLength: 8)
-                    IrisActionButton(title: "Open Settings", style: .quiet) {
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
-                } else if music.trackName != nil {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(music.trackName ?? "")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.text)
-                            .lineLimit(1)
-                        Text(music.artistName ?? "")
-                            .font(.system(size: 9))
-                            .foregroundStyle(Theme.tertiary)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 8)
-                    transportButton("backward.fill", 28) { music.previousTrack() }
-                    transportButton(music.isPlaying ? "pause.fill" : "play.fill", 36,
-                                    iconColor: .black, background: .white) { music.togglePlayPause() }
-                    transportButton("forward.fill", 28) { music.nextTrack() }
-                } else {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Nothing playing")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.text)
-                        Text("Open Music and press play — steer it from here.")
-                            .font(.system(size: 9))
-                            .foregroundStyle(Theme.tertiary)
-                            .lineLimit(2)
-                    }
-                    Spacer(minLength: 8)
-                    IrisActionButton(title: "Open Music", style: .quiet) {
-                        NSWorkspace.shared.openApplication(
-                            at: URL(fileURLWithPath: "/System/Applications/Music.app"),
-                            configuration: NSWorkspace.OpenConfiguration()
-                        )
-                    }
-                }
-            }
-            .padding(10)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
