@@ -309,6 +309,7 @@ struct TheaterView: View {
                 }
             }
             Spacer()
+            musicStrip
             Button {
                 controller.dismiss()
             } label: {
@@ -326,7 +327,6 @@ struct TheaterView: View {
     private func controls(width: CGFloat) -> some View {
         VStack(spacing: 16) {
             segments(width: width)
-            musicStrip
             HStack(spacing: 30) {
                 theaterButton("backward.end.fill", diameter: 46, enabled: session.queueIndex > 0) {
                     controller.step(-1)
