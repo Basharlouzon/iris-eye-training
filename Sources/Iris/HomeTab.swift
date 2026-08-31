@@ -138,11 +138,27 @@ struct HomeTab: View {
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
                     .frame(width: 40, height: 40)
                     .overlay(
-                        Image(systemName: "music.note")
+                        Image(systemName: music.denied ? "hand.raised.fill" : "music.note")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.9))
                     )
-                if music.trackName != nil {
+                if music.denied {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Music access needed")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.text)
+                        Text("System Settings → Privacy & Security → Automation → allow Iris.")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.tertiary)
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 8)
+                    IrisActionButton(title: "Open Settings", style: .quiet) {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                } else if music.trackName != nil {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(music.trackName ?? "")
                             .font(.system(size: 12, weight: .bold, design: .rounded))

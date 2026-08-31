@@ -57,18 +57,26 @@ final class MusicService: ObservableObject {
             return
         }
         DispatchQueue.global(qos: .utility).async { [weak self] in
+            // Radio streams have no duration/position — read them defensively
+            // so a live station still reports track + state.
             let script = """
             tell application "Music"
                 set st to (player state as string)
+                set t to ""
+                set a to ""
+                set p to ""
+                set d to ""
                 if (exists current track) then
                     set t to (name of current track)
                     set a to (artist of current track)
-                    set d to (duration of current track)
-                    set p to (player position)
-                    return (t & "|" & a & "|" & st & "|" & (p as string) & "|" & (d as string))
-                else
-                    return ("||" & st & "|||")
+                    try
+                        set p to ((player position) as string)
+                    end try
+                    try
+                        set d to ((duration of current track) as string)
+                    end try
                 end if
+                return (t & "|" & a & "|" & st & "|" & p & "|" & d)
             end tell
             """
             let output = Self.execute(script)
@@ -78,6 +86,10 @@ final class MusicService: ObservableObject {
     }
 
     private func apply(_ result: (track: String?, artist: String?, playing: Bool, progress: Double)) {
+        // A successful read means Automation access is working again.
+        if result.track != nil || !result.playing {
+            denied = false
+        }
         trackName = result.track
         artistName = result.artist
         isPlaying = result.playing
