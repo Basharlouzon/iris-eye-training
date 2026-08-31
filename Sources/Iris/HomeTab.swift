@@ -127,10 +127,11 @@ struct HomeTab: View {
         }
     }
 
-    /// Music transport (reference 2) — shown only while a track is playing/app is connected.
+    /// Music transport (reference 2) — always present when enabled; controls
+    /// appear once Music is playing.
     @ViewBuilder
     private var musicBar: some View {
-        if musicSupport, music.trackName != nil {
+        if musicSupport {
             HStack(spacing: 10) {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(LinearGradient(colors: [Theme.gradientTop, Theme.gradientBottom],
@@ -141,21 +142,40 @@ struct HomeTab: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.9))
                     )
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(music.trackName ?? "")
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.text)
-                        .lineLimit(1)
-                    Text(music.artistName ?? "")
-                        .font(.system(size: 9))
-                        .foregroundStyle(Theme.tertiary)
-                        .lineLimit(1)
+                if music.trackName != nil {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(music.trackName ?? "")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.text)
+                            .lineLimit(1)
+                        Text(music.artistName ?? "")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.tertiary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 8)
+                    transportButton("backward.fill", 28) { music.previousTrack() }
+                    transportButton(music.isPlaying ? "pause.fill" : "play.fill", 36,
+                                    iconColor: .black, background: .white) { music.togglePlayPause() }
+                    transportButton("forward.fill", 28) { music.nextTrack() }
+                } else {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Nothing playing")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.text)
+                        Text("Open Music and press play — steer it from here.")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.tertiary)
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 8)
+                    IrisActionButton(title: "Open Music", style: .quiet) {
+                        NSWorkspace.shared.openApplication(
+                            at: URL(fileURLWithPath: "/System/Applications/Music.app"),
+                            configuration: NSWorkspace.OpenConfiguration()
+                        )
+                    }
                 }
-                Spacer(minLength: 8)
-                transportButton("backward.fill", 28) { music.previousTrack() }
-                transportButton(music.isPlaying ? "pause.fill" : "play.fill", 36,
-                                iconColor: .black, background: .white) { music.togglePlayPause() }
-                transportButton("forward.fill", 28) { music.nextTrack() }
             }
             .padding(10)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

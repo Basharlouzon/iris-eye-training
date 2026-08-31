@@ -43,10 +43,15 @@ final class TheaterController: ObservableObject {
         w.hasShadow = false
         w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         w.acceptsMouseMovedEvents = true
-        w.contentView = NSHostingView(rootView: TheaterView(session: session, controller: self))
+        w.contentView = NSHostingView(rootView: TheaterView(session: session,
+                                                            controller: self,
+                                                            music: AppState.shared.music))
         window = w
         w.orderFrontRegardless()
         w.makeKey()
+
+        // Keep track info live for the in-theater music strip.
+        AppState.shared.music.startPolling()
 
         // Keep the display awake for the length of the routine.
         activity = ProcessInfo.processInfo.beginActivity(options: [.idleDisplaySleepDisabled, .userInitiated],
@@ -202,6 +207,7 @@ final class TheaterController: ObservableObject {
         self.activity = nil
         setCursor(hidden: false)
         controlsVisible = true
+        AppState.shared.music.stopPolling()
         window?.orderOut(nil)
         window = nil
     }
@@ -221,6 +227,9 @@ final class TheaterWindow: NSWindow {
 struct TheaterView: View {
     @ObservedObject var session: ExerciseSession
     @ObservedObject var controller: TheaterController
+    let music: MusicService
+
+    @AppStorage(SettingsKeys.musicSupport) private var musicSupport = true
 
     private var stepCount: Int { max(1, session.queue.count) }
     private var isLast: Bool { session.queueIndex >= stepCount - 1 }
@@ -317,6 +326,7 @@ struct TheaterView: View {
     private func controls(width: CGFloat) -> some View {
         VStack(spacing: 16) {
             segments(width: width)
+            musicStrip
             HStack(spacing: 30) {
                 theaterButton("backward.end.fill", diameter: 46, enabled: session.queueIndex > 0) {
                     controller.step(-1)
@@ -364,6 +374,53 @@ struct TheaterView: View {
             }
             .frame(width: min(420, width * 0.4))
         }
+    }
+
+    /// Slim music strip (reference 2) so tracks can be steered mid-routine
+    /// without leaving Focus Mode. Fades with the rest of the chrome.
+    @ViewBuilder
+    private var musicStrip: some View {
+        if musicSupport, let track = music.trackName {
+            HStack(spacing: 14) {
+                Image(systemName: "music.note")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 30, height: 30)
+                    .background(Theme.surfaceStrong, in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(track)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Theme.text)
+                        .lineLimit(1)
+                    Text(music.artistName ?? "")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.tertiary)
+                        .lineLimit(1)
+                }
+                .frame(width: 230, alignment: .leading)
+                smallTransport("backward.fill") { music.previousTrack() }
+                smallTransport(music.isPlaying ? "pause.fill" : "play.fill", prominent: true) {
+                    music.togglePlayPause()
+                }
+                smallTransport("forward.fill") { music.nextTrack() }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(Theme.surface, in: Capsule())
+        }
+    }
+
+    private func smallTransport(_ icon: String,
+                                prominent: Bool = false,
+                                action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: prominent ? 15 : 12, weight: .semibold))
+                .foregroundStyle(prominent ? Theme.onAccent : Theme.text)
+                .frame(width: prominent ? 36 : 30, height: prominent ? 36 : 30)
+                .background(prominent ? Theme.accent : Theme.surfaceStrong, in: Circle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var stepCompleteBadge: some View {
