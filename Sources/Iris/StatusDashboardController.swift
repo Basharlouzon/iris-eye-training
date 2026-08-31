@@ -83,9 +83,18 @@ final class StatusDashboardController: NSObject {
             eyeState = .idle(blinkEvery: 6)
         }
 
-        let frame = StatusItemEye.frame(for: eyeState, tick: tick)
+        var frame = StatusItemEye.frame(for: eyeState, tick: tick)
+        frame.title = frame.title ?? title
+        if state.exercises.running {
+            // Orbiting dot: one lap every 2.5 s during Focus Mode.
+            frame.orbitAngle = tick.truncatingRemainder(dividingBy: 2.5) / 2.5 * 2 * .pi
+        }
+        if !state.unreadAlerts.isEmpty {
+            frame.badgeCount = state.unreadAlerts.count
+        }
+
         statusItem.button?.image = StatusItemEye.image(frame)
-        statusItem.button?.title = title ?? ""
+        statusItem.button?.title = frame.title ?? ""
     }
 
     deinit {
