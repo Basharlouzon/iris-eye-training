@@ -310,15 +310,8 @@ struct IrisDashboardView: View {
     @ObservedObject var model: PanelModel
     let topInset: CGFloat
 
-    @AppStorage(SettingsKeys.hasOnboarded) private var hasOnboarded = false
     var body: some View {
-        Group {
-            if hasOnboarded {
-                mainPanel
-            } else {
-                OnboardingView(state: state, topInset: topInset)
-            }
-        }
+        mainPanel
         .overlay {
             if model.showSettings {
                 SettingsSheet(state: state, model: model, topInset: topInset)

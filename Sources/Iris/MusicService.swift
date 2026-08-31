@@ -2,8 +2,13 @@ import Foundation
 import SwiftUI
 import AppKit
 
-/// Controls Apple Music through `osascript`. Apple Events trigger the standard
-/// TCC prompt on first use; when denied the UI falls back gracefully.
+/// Controls Apple Music. Reads track info and drives playback via AppleScript.
+///
+/// Uses NSAppleScript executed on the main thread — this works both in normal
+/// (ad-hoc / Developer ID) builds and inside the App Sandbox for App Store
+/// builds (paired with the com.apple.security.scripting-targets entitlement).
+/// First execution triggers the standard macOS "Iris wants to control Music"
+/// consent; denial is surfaced through `denied`.
 @MainActor
 final class MusicService: ObservableObject {
     @Published var trackName: String?
@@ -35,17 +40,17 @@ final class MusicService: ObservableObject {
 
     func togglePlayPause() {
         run(#"tell application "Music" to playpause"#)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.refresh() }
+        refresh()
     }
 
     func nextTrack() {
         run(#"tell application "Music" to next track"#)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.refresh() }
+        refresh()
     }
 
     func previousTrack() {
         run(#"tell application "Music" to previous track"#)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.refresh() }
+        refresh()
     }
 
     func refresh() {
@@ -56,34 +61,30 @@ final class MusicService: ObservableObject {
             progress = 0
             return
         }
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            // Note: variable names must avoid Music dictionary terminology
-            // (e.g. `st` is rejected) and radio streams have no duration/position,
-            // so those are read defensively.
-            let script = """
-            tell application "Music"
-                set playerState to (player state as string)
-                set trackTitle to ""
-                set trackArtist to ""
-                set trackPos to ""
-                set trackDur to ""
-                if (exists current track) then
-                    set trackTitle to (name of current track)
-                    set trackArtist to (artist of current track)
-                    try
-                        set trackPos to ((player position) as string)
-                    end try
-                    try
-                        set trackDur to ((duration of current track) as string)
-                    end try
-                end if
-                return (trackTitle & "|" & trackArtist & "|" & playerState & "|" & trackPos & "|" & trackDur)
-            end tell
-            """
-            let output = Self.execute(script)
-            let parsed = Self.parse(output)
-            Task { @MainActor in self?.apply(parsed) }
-        }
+        // Note: variable names must avoid Music dictionary terminology
+        // (e.g. `st` is rejected) and radio streams have no duration/position,
+        // so those are read defensively.
+        let output = Self.execute("""
+        tell application "Music"
+            set playerState to (player state as string)
+            set trackTitle to ""
+            set trackArtist to ""
+            set trackPos to ""
+            set trackDur to ""
+            if (exists current track) then
+                set trackTitle to (name of current track)
+                set trackArtist to (artist of current track)
+                try
+                    set trackPos to ((player position) as string)
+                end try
+                try
+                    set trackDur to ((duration of current track) as string)
+                end try
+            end if
+            return (trackTitle & "|" & trackArtist & "|" & playerState & "|" & trackPos & "|" & trackDur)
+        end tell
+        """)
+        apply(Self.parse(output))
     }
 
     private func apply(_ result: (track: String?, artist: String?, playing: Bool, progress: Double)) {
@@ -109,35 +110,22 @@ final class MusicService: ObservableObject {
         return (track, artist, state == "playing", progress)
     }
 
-    nonisolated private static func execute(_ source: String) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", source]
-        let stdout = Pipe()
-        let stderr = Pipe()
-        process.standardOutput = stdout
-        process.standardError = stderr
-        do {
-            try process.run()
-        } catch {
-            return nil
-        }
-        let errData = stderr.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        if process.terminationStatus != 0 {
-            if let text = String(data: errData, encoding: .utf8),
-               text.contains("-1743") || text.lowercased().contains("not authorized") {
+    @discardableResult
+    private static func execute(_ source: String) -> String? {
+        guard let script = NSAppleScript(source: source) else { return nil }
+        var errorInfo: NSDictionary?
+        let descriptor = script.executeAndReturnError(&errorInfo)
+        if let errorInfo {
+            let code = errorInfo[NSAppleScript.errorNumber] as? Int ?? 0
+            if code == -1743 {
                 Task { @MainActor in MusicService.notifyDenied() }
             }
             return nil
         }
-        let data = stdout.fileHandleForReading.readDataToEndOfFile()
-        guard let text = String(data: data, encoding: .utf8) else { return nil }
-        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return descriptor.stringValue
     }
 
     nonisolated private static func notifyDenied() {
-        // Hop through the shared instance so the UI can react.
         Task { @MainActor in
             AppState.shared.music.denied = true
         }
@@ -145,8 +133,6 @@ final class MusicService: ObservableObject {
 
     private func run(_ source: String) {
         guard musicRunning else { return }
-        DispatchQueue.global(qos: .utility).async {
-            _ = Self.execute(source)
-        }
+        _ = Self.execute(source)
     }
 }

@@ -35,10 +35,37 @@ final class IrisExperienceTests: XCTestCase {
         XCTAssertEqual(RoutinePreset.resolve(id: "missing"), .balanced)
     }
 
-    func testOnboardingAdvancesThroughAllThreeApprovedSteps() {
-        XCTAssertEqual(OnboardingStep.promise.next, .routine)
+    func testOnboardingCannotSkipTheEyeLanguageStep() {
+        XCTAssertEqual(
+            OnboardingStep.allCases,
+            [.promise, .language, .routine, .privacy]
+        )
+        XCTAssertEqual(OnboardingStep.promise.next, .language)
+        XCTAssertEqual(OnboardingStep.language.next, .routine)
         XCTAssertEqual(OnboardingStep.routine.next, .privacy)
         XCTAssertNil(OnboardingStep.privacy.next)
+    }
+
+    func testOnboardingDraftDoesNotPersistRoutineUntilItIsCommitted() {
+        let suiteName = "IrisTests.onboarding-draft.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(RoutinePreset.gentle.id, forKey: SettingsKeys.routinePreset)
+        defaults.set(Double(RoutinePreset.gentle.focusMinutes), forKey: SettingsKeys.breakInterval)
+        defaults.set(true, forKey: SettingsKeys.hasOnboarded)
+
+        var draft = OnboardingDraft(defaults: defaults)
+        draft.selectedRoutineID = RoutinePreset.classic.id
+
+        XCTAssertEqual(defaults.string(forKey: SettingsKeys.routinePreset), "gentle")
+        XCTAssertEqual(defaults.double(forKey: SettingsKeys.breakInterval), 60)
+        XCTAssertTrue(defaults.bool(forKey: SettingsKeys.hasOnboarded))
+
+        draft.commit(to: defaults)
+
+        XCTAssertEqual(defaults.string(forKey: SettingsKeys.routinePreset), "classic")
+        XCTAssertEqual(defaults.double(forKey: SettingsKeys.breakInterval), 20)
+        XCTAssertTrue(defaults.bool(forKey: SettingsKeys.hasOnboarded))
     }
 
     func testProgressSnapshotClampsComfortScore() {
@@ -122,6 +149,15 @@ final class IrisExperienceTests: XCTestCase {
         XCTAssertTrue(configuration.previewsSettings)
         XCTAssertFalse(IrisLaunchConfiguration(arguments: ["Iris"]).previewsStatusDashboard)
         XCTAssertFalse(IrisLaunchConfiguration(arguments: ["Iris"]).previewsSettings)
+    }
+
+    func testOnboardingPreviewLaunchArgumentIsNotIgnored() {
+        let preview = IrisLaunchConfiguration(
+            arguments: ["Iris", "--iris-preview-onboarding"]
+        )
+        let regularLaunch = IrisLaunchConfiguration(arguments: ["Iris"])
+
+        XCTAssertNotEqual(preview, regularLaunch)
     }
 
     func testStatusDashboardRightAlignsBeneathStatusItem() {

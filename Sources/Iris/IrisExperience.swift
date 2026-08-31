@@ -74,11 +74,28 @@ struct RoutinePreset: Identifiable, Equatable {
 
 enum OnboardingStep: Int, CaseIterable {
     case promise
+    case language
     case routine
     case privacy
 
     var next: Self? {
         Self(rawValue: rawValue + 1)
+    }
+}
+
+struct OnboardingDraft: Equatable {
+    var selectedRoutineID: String
+
+    init(defaults: UserDefaults = .standard) {
+        selectedRoutineID = defaults.string(forKey: SettingsKeys.routinePreset)
+            ?? RoutinePreset.balanced.id
+    }
+
+    func commit(to defaults: UserDefaults = .standard) {
+        let routine = RoutinePreset.resolve(id: selectedRoutineID)
+        defaults.set(routine.id, forKey: SettingsKeys.routinePreset)
+        defaults.set(Double(routine.focusMinutes), forKey: SettingsKeys.breakInterval)
+        defaults.set(true, forKey: SettingsKeys.hasOnboarded)
     }
 }
 
@@ -182,6 +199,7 @@ struct IrisLaunchConfiguration: Equatable {
     let previewTab: IrisTab?
     let previewsStatusDashboard: Bool
     let previewsSettings: Bool
+    let previewsOnboarding: Bool
 
     init(arguments: [String]) {
         let prefix = "--iris-preview="
@@ -191,5 +209,6 @@ struct IrisLaunchConfiguration: Equatable {
         previewTab = value.flatMap(IrisTab.init(rawValue:))
         previewsStatusDashboard = arguments.contains("--iris-preview-status-dashboard")
         previewsSettings = arguments.contains("--iris-preview-settings")
+        previewsOnboarding = arguments.contains("--iris-preview-onboarding")
     }
 }

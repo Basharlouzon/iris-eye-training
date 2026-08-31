@@ -62,9 +62,9 @@ struct SettingsSheet: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    Button("Run onboarding again") {
-                        UserDefaults.standard.set(false, forKey: SettingsKeys.hasOnboarded)
+                    Button("View onboarding") {
                         model.showSettings = false
+                        OnboardingWindowController.shared.present()
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 10, weight: .medium))

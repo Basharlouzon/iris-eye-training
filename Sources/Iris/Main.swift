@@ -18,12 +18,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller = NotchPanelController.shared
         let statusController = StatusDashboardController.shared
         let configuration = IrisLaunchConfiguration(arguments: CommandLine.arguments)
-        if configuration.previewsSettings {
+        if configuration.previewsOnboarding {
+            OnboardingWindowController.shared.present()
+        } else if configuration.previewsSettings {
             statusController.openSettings()
         } else if configuration.previewsStatusDashboard {
             statusController.open(tab: configuration.previewTab ?? .today)
         } else if let previewTab = configuration.previewTab {
             controller.open(tab: previewTab)
+        } else {
+            OnboardingWindowController.shared.presentIfNeeded()
         }
     }
 }
