@@ -16,6 +16,9 @@ echo "▸ Uploading to App Store Connect (TestFlight)…"
 xcodebuild -exportArchive \
   -archivePath build/Iris.xcarchive \
   -exportOptionsPlist ExportOptions-appstore.plist \
+  -authenticationKeyID 34Y39QQ4Z9 \
+  -authenticationKeyIssuerID b56cbc46-54f9-4512-a691-11baccad691e \
+  -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_34Y39QQ4Z9.p8" \
   -allowProvisioningUpdates
 
 echo "✓ Uploaded. Track processing at https://appstoreconnect.apple.com → Iris → TestFlight"
