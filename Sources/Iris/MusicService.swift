@@ -57,26 +57,27 @@ final class MusicService: ObservableObject {
             return
         }
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            // Radio streams have no duration/position — read them defensively
-            // so a live station still reports track + state.
+            // Note: variable names must avoid Music dictionary terminology
+            // (e.g. `st` is rejected) and radio streams have no duration/position,
+            // so those are read defensively.
             let script = """
             tell application "Music"
-                set st to (player state as string)
-                set t to ""
-                set a to ""
-                set p to ""
-                set d to ""
+                set playerState to (player state as string)
+                set trackTitle to ""
+                set trackArtist to ""
+                set trackPos to ""
+                set trackDur to ""
                 if (exists current track) then
-                    set t to (name of current track)
-                    set a to (artist of current track)
+                    set trackTitle to (name of current track)
+                    set trackArtist to (artist of current track)
                     try
-                        set p to ((player position) as string)
+                        set trackPos to ((player position) as string)
                     end try
                     try
-                        set d to ((duration of current track) as string)
+                        set trackDur to ((duration of current track) as string)
                     end try
                 end if
-                return (t & "|" & a & "|" & st & "|" & p & "|" & d)
+                return (trackTitle & "|" & trackArtist & "|" & playerState & "|" & trackPos & "|" & trackDur)
             end tell
             """
             let output = Self.execute(script)
