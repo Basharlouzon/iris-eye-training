@@ -46,6 +46,7 @@ final class NotchPanelController {
     private var hoverWork: DispatchWorkItem?
     private var exitWork: DispatchWorkItem?
     private var monitors: [Any] = []
+    private var notchPillVisible = false
 
     static let panelWidth: CGFloat = 404
     static let expandedHeight: CGFloat = 540
@@ -57,10 +58,26 @@ final class NotchPanelController {
         configurePanel()
         positionCurrentState(animate: false)
         panel.orderFrontRegardless()
+        updateNotchVisibility()
         installMonitors()
         // Keep timers honest even when nothing else is happening.
         _ = ProcessInfo.processInfo.beginActivity(options: [.userInitiated],
                                                   reason: "Iris break reminders")
+    }
+
+    /// The notch pill is optional — the animated menu-bar eye is the primary
+    /// indicator. Hidden by default; the panel still drops from the notch
+    /// whenever it is opened.
+    func updateNotchVisibility() {
+        let show = UserDefaults.standard.bool(forKey: SettingsKeys.showNotchPill)
+        notchPillVisible = show
+        guard !model.isExpanded else { return }
+        if show {
+            positionCurrentState(animate: false)
+            panel.orderFrontRegardless()
+        } else {
+            panel.orderOut(nil)
+        }
     }
 
     // MARK: Panel setup
@@ -226,6 +243,7 @@ final class NotchPanelController {
         guard flag != model.isExpanded else { return }
         if flag {
             StatusDashboardController.shared.closeForAnotherDashboard()
+            if !panel.isVisible { panel.orderFrontRegardless() }
         }
         model.isPinned = pin
         model.isExpanded = flag
@@ -236,6 +254,9 @@ final class NotchPanelController {
             model.showSettings = false
         }
         positionCurrentState(animate: true)
+        if !model.isExpanded && !notchPillVisible {
+            panel.orderOut(nil)
+        }
     }
 
     func expandPinned() {

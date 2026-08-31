@@ -46,6 +46,7 @@ final class StatusDashboardController: NSObject {
     private var closeWork: DispatchWorkItem?
     private var eventMonitors: [Any] = []
     private var screenObserver: NSObjectProtocol?
+    private var eyeTimer: Timer?
 
     private init(state: AppState) {
         self.state = state
@@ -53,6 +54,38 @@ final class StatusDashboardController: NSObject {
         configureStatusItem()
         configurePanel()
         installMonitors()
+        startEyeAnimation()
+    }
+
+    /// The menu-bar eye is the app's living indicator: it blinks, paces its
+    /// blinks with break urgency, half-closes and pulses when a break is due,
+    /// and counts down the seconds during a rest.
+    private func startEyeAnimation() {
+        let t = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.updateEye() }
+        }
+        eyeTimer = t
+    }
+
+    private func updateEye() {
+        let tick = Date().timeIntervalSinceReferenceDate
+        let eyeState: StatusItemEye.State
+        var title: String?
+
+        if let rest = state.restSecondsLeft {
+            eyeState = .resting(secondsLeft: rest)
+            title = "\(rest)s"
+        } else if !state.unreadAlerts.isEmpty {
+            eyeState = .due
+        } else if let next = state.nextBreak, next.timeIntervalSinceNow < 120 {
+            eyeState = .approaching
+        } else {
+            eyeState = .idle(blinkEvery: 6)
+        }
+
+        let frame = StatusItemEye.frame(for: eyeState, tick: tick)
+        statusItem.button?.image = StatusItemEye.image(frame)
+        statusItem.button?.title = title ?? ""
     }
 
     deinit {
@@ -65,10 +98,8 @@ final class StatusDashboardController: NSObject {
     private func configureStatusItem() {
         guard let button = statusItem.button else { return }
 
-        let image = NSImage(systemSymbolName: "eye.fill", accessibilityDescription: "Iris")
-        image?.isTemplate = true
-        button.image = image
-        button.imagePosition = .imageOnly
+        button.imagePosition = .imageLeading
+        button.image = StatusItemEye.image(StatusItemEye.frame(for: .idle(blinkEvery: 6), tick: 0))
         button.toolTip = "Iris"
         button.setAccessibilityLabel("Iris")
         button.target = self

@@ -12,6 +12,7 @@ struct SettingsSheet: View {
     @AppStorage(SettingsKeys.useFahrenheit) private var useFahrenheit = false
     @AppStorage(SettingsKeys.routinePreset) private var routinePreset = RoutinePreset.balanced.id
     @AppStorage(SettingsKeys.focusBreaks) private var focusBreaks = true
+    @AppStorage(SettingsKeys.showNotchPill) private var showInNotch = false
     @AppStorage(SettingsKeys.musicSupport) private var musicSupport = true
 
     @State private var cityText = UserDefaults.standard.string(forKey: SettingsKeys.city) ?? "New York"
@@ -119,6 +120,9 @@ struct SettingsSheet: View {
                 toggleRow("Full-screen breaks", detail: "Dim the screen when a break is due", isOn: $focusBreaks)
                 toggleRow("Auto-open break", detail: "Show Iris when a reset is due", isOn: $autoExpand)
                 toggleRow("Gentle sounds", detail: "Play a quiet reminder cue", isOn: $sounds)
+                toggleRow("Show in notch", detail: "Optional status pill — the menu-bar eye stays on", isOn: $showInNotch) { _ in
+                    NotchPanelController.shared.updateNotchVisibility()
+                }
             }
         }
     }
