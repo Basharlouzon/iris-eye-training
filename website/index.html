@@ -107,6 +107,77 @@
   footer a:hover{color:var(--text)}
   footer .row{display:flex;gap:22px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
 
+  /* ---- notch pill mock ---- */
+  #lives{padding-top:26px}
+  .macstrip{position:relative;height:110px;background:#000;border-radius:0 0 30px 30px;
+    display:flex;justify-content:center;align-items:flex-start;
+    box-shadow:inset 0 -1px 0 rgba(255,255,255,.05), 0 30px 60px -30px rgba(255,143,42,.12)}
+  .macstrip::before{content:"";position:absolute;inset:0 0 auto 0;height:40px;border-radius:0 0 30px 30px;
+    background:linear-gradient(180deg,rgba(255,255,255,.045),transparent)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:36px;
+    background:#000;border-radius:0 0 18px 18px}
+  .notch::after{content:"";position:absolute;right:16px;top:13px;width:7px;height:7px;border-radius:50%;
+    background:#161616;box-shadow:inset 0 0 3px #000}
+  .pill{position:absolute;top:0;left:50%;transform:translateX(-50%);width:210px;height:56px;background:#000;
+    border-radius:0 0 15px 15px;cursor:pointer;overflow:hidden;
+    transition:width .5s cubic-bezier(.22,.9,.28,1.04)}
+  .pill:hover{width:430px}
+  .pill .closed,.pill .open{position:absolute;left:0;right:0;bottom:0;height:30px;display:flex;
+    align-items:center;justify-content:center;gap:8px;transition:opacity .3s ease}
+  .pill .closed{opacity:1}
+  .pill .open{opacity:0;gap:14px}
+  .pill:hover .closed{opacity:0}
+  .pill:hover .open{opacity:1}
+  .pill-eye{width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFD9A8,#FF8F2A)}
+  .pill-title{color:var(--text);font-size:12px;font-weight:600}
+  .pill-time{color:var(--sub);font-size:11px;font-family:ui-monospace,monospace}
+  .pill-badge{color:#0A0A0A;background:var(--accent);font-size:10px;font-weight:700;
+    padding:1px 6px;border-radius:99px}
+  .pill .open b{color:var(--text);font-size:12.5px}
+  .pill .open span{color:var(--sub);font-size:11px}
+  .pill .open .go{color:#0A0A0A;background:var(--accent);padding:3px 10px;border-radius:99px;
+    font-weight:700;font-size:11px}
+
+  /* ---- dashboard mock ---- */
+  #dash{padding:110px 0}
+  .dash{background:#000;border-radius:26px;padding:20px;border:1px solid var(--line);
+    box-shadow:0 40px 80px -30px rgba(0,0,0,.8);max-width:430px;margin-left:auto;
+    font-family:-apple-system,sans-serif}
+  .dash .dhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .dash .dhead b{color:var(--text);font-size:15px}
+  .dash .dhead .priv{margin-left:auto;color:var(--rest);font-size:8px;font-weight:700;letter-spacing:1px}
+  .dash .dtabs{display:flex;gap:6px;margin-bottom:14px}
+  .dash .dtabs span{font-size:10.5px;font-weight:600;color:var(--sub);padding:5px 12px;
+    border-radius:99px;background:var(--panel2)}
+  .dash .dtabs span.on{color:var(--accent);background:var(--surface, #17190f)}
+  .dash .card{background:#101210;border-radius:14px;padding:12px;margin-bottom:10px}
+  .dash .eyebrow{font-size:7.5px;font-weight:700;letter-spacing:1.5px;color:#B7F77A;margin-bottom:5px}
+  .dash .ct{color:var(--text);font-size:12.5px;font-weight:700}
+  .dash .cd{color:var(--dim);font-size:9.5px;line-height:1.45;margin-top:3px}
+  .dash .tiles{display:flex;gap:8px;margin-bottom:10px}
+  .dash .tile{flex:1;background:#101210;border-radius:12px;padding:10px}
+  .dash .tile b{display:block;color:var(--text);font-size:19px}
+  .dash .tile i{display:block;font-style:normal;color:var(--dim);font-size:8.5px;margin-top:2px}
+  .dash .lbl{font-size:7.5px;font-weight:700;letter-spacing:1.2px;color:var(--dim);margin-bottom:4px;display:block}
+  .dash .pair{display:flex;gap:8px}
+  .dash .pair .p{flex:1;background:#101210;border-radius:12px;padding:10px}
+  .dash .pair .p b{display:block;font-size:12px;color:var(--text)}
+  .dash .pair .p i{font-style:normal;font-size:8.5px;color:var(--dim)}
+  .dash .dfoot{text-align:center;color:var(--dim);font-size:8px;margin-top:12px;letter-spacing:.8px}
+  .dash .begin{display:inline-block;color:#0A0A0A;background:var(--rest);font-size:10px;font-weight:700;
+    padding:5px 12px;border-radius:99px;margin-top:8px}
+
+  /* ---- weekly chart ---- */
+  .wk{display:flex;align-items:flex-end;gap:7px;height:64px;margin-top:10px}
+  .wk .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+  .wk .bar{width:100%;border-radius:5px;background:var(--panel2)}
+  .wk .bar.today{background:var(--prog)}
+  .wk em{font-style:normal;font-size:8.5px;color:var(--dim)}
+
+  /* ---- icon in final ---- */
+  .icon-final{width:112px;height:112px;border-radius:26px;margin:0 auto 26px;display:block;
+    box-shadow:0 30px 60px -20px rgba(255,143,42,.25)}
+
   /* reveal on scroll */
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
   .reveal.in{opacity:1;transform:none}
@@ -143,6 +214,35 @@
   </div>
 </header>
 
+<section id="lives">
+  <div class="wrap">
+    <div class="center reveal">
+      <span class="kick">Where it lives</span>
+      <h2>It hangs from your notch.</h2>
+      <p class="lead" style="margin:0 auto">A quiet pill with a live countdown, a progress ring and an
+         alert badge. Hover it — that's the whole dashboard peeking out.</p>
+    </div>
+    <div class="macstrip reveal">
+      <div class="notch"></div>
+      <div class="pill" id="pill">
+        <div class="closed">
+          <span class="pill-eye"></span>
+          <span class="pill-title">Focus block</span>
+          <span class="pill-time" id="pillTime">18:26</span>
+          <span class="pill-badge">2</span>
+        </div>
+        <div class="open">
+          <span class="pill-eyebrow" style="color:#B7F77A;font-size:8px;font-weight:700;letter-spacing:1.5px">BREAK COACH</span>
+          <b>A clean reset window is ready</b>
+          <span class="go">Begin 20 sec</span>
+        </div>
+      </div>
+    </div>
+    <p class="center reveal" style="color:var(--dim);font-size:12px;margin-top:22px">
+      On Macs without a notch, the same pill floats at the top-center — off by default, one toggle in Settings.</p>
+  </div>
+</section>
+
 <section id="features" class="wrap">
   <div class="center reveal">
     <span class="kick">Features</span>
@@ -175,6 +275,55 @@
       <h3>Private by design</h3>
       <p>App Sandbox, no account, no tracking, no analytics. History and settings
          never leave your Mac.</p></div>
+  </div>
+</section>
+
+<section id="dash">
+  <div class="wrap">
+    <div class="split reveal">
+      <div>
+        <span class="kick">Dashboard</span>
+        <h2>Open the eye,<br>see your day.</h2>
+        <p class="lead" style="margin-top:12px">One dark panel under the menu bar: today's break coach,
+           your honest weekly rhythm, live weather, tonight's moon and a music chip.</p>
+        <ul class="check">
+          <li>Only completed actions are counted — ever</li>
+          <li>Every card is editable from Settings</li>
+          <li>Runs beside your clock at 404 × 540</li>
+        </ul>
+      </div>
+      <div class="dash" aria-hidden="true">
+        <div class="dhead"><b>Iris</b><span class="priv">PRIVATE • ON DEVICE</span></div>
+        <div class="dtabs"><span class="on">Today</span><span>Train</span><span>Progress</span></div>
+        <div class="card">
+          <div class="eyebrow">BREAK COACH</div>
+          <div class="ct">A clean reset window is ready</div>
+          <div class="cd">A short distance break now protects the next deep-work block.</div>
+          <span class="begin">Begin 20 sec</span>
+        </div>
+        <div class="tiles">
+          <div class="tile"><span class="lbl">FOCUS BLOCKS</span><b>9</b><i>180 min completed</i></div>
+          <div class="tile"><span class="lbl">DISTANCE BREAKS</span><b>9</b><i>9 resets completed</i></div>
+        </div>
+        <div class="pair">
+          <div class="p"><span class="lbl">CLEAR</span><b>34°</b><i>cairo</i></div>
+          <div class="p"><span class="lbl">MOON</span><b>Waning Gibbous</b><i>87% illuminated</i></div>
+        </div>
+        <div class="card">
+          <span class="lbl" style="color:#A98BFF;font-weight:700">THIS WEEK</span>
+          <div class="wk">
+            <div class="b"><em>2</em><div class="bar" style="height:14%"></div></div>
+            <div class="b"><em>5</em><div class="bar" style="height:36%"></div></div>
+            <div class="b"><em>3</em><div class="bar" style="height:22%"></div></div>
+            <div class="b"><em>8</em><div class="bar" style="height:58%"></div></div>
+            <div class="b"><em>6</em><div class="bar" style="height:44%"></div></div>
+            <div class="b"><em>9</em><div class="bar" style="height:66%"></div></div>
+            <div class="b"><em>25</em><div class="bar today" style="height:100%"></div></div>
+          </div>
+        </div>
+        <div class="dfoot">IRIS 1.0 · REST YOUR EYES, ON SCHEDULE</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -251,6 +400,7 @@
 </section>
 
 <div class="final">
+  <img class="icon-final" src="icon.png" alt="Iris app icon" width="112" height="112">
   <h2>Your workday feels better<br><span class="grad">with an eye in it.</span></h2>
   <p class="sub">Free for your personal menu bar. No account required.</p>
   <a class="btn btn-primary" href="https://github.com/Basharlouzon/iris-eye-training/releases/latest/download/Iris.zip">Download Iris for macOS</a>
@@ -274,6 +424,7 @@
   /* ---------- the eye renderer (port of the app's StatusItemEye) ---------- */
   function drawEye(ctx, cx, cy, s, open, alpha, opts){
     opts = opts || {};
+    var dx = opts.dx || 0, dy = opts.dy || 0;
     ctx.save();
     ctx.globalAlpha = alpha == null ? 1 : alpha;
     ctx.strokeStyle = opts.color || "#E9ECE6";
@@ -292,11 +443,11 @@
       ctx.save();
       ctx.clip(eye);
       var r = s * 0.145 * (opts.iris || 1);
-      var g = ctx.createRadialGradient(cx + opts.dx*2 - r*.3, cy + opts.dy*2 - r*.3, r*.15, cx + opts.dx*2, cy + opts.dy*2, r*1.5);
+      var g = ctx.createRadialGradient(cx + dx*2 - r*.3, cy + dy*2 - r*.3, r*.15, cx + dx*2, cy + dy*2, r*1.5);
       g.addColorStop(0, opts.irisFrom || "#FFD9A8");
       g.addColorStop(1, opts.irisTo || ACCENT);
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(cx + opts.dx*2, cy + opts.dy*2, r, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + dx*2, cy + dy*2, r, 0, 7); ctx.fill();
       ctx.fillStyle = "#0A0A0A";
       ctx.beginPath(); ctx.arc(cx + opts.dx*2, cy + opts.dy*2, r*0.42, 0, 7); ctx.fill();
       ctx.restore();
@@ -308,7 +459,7 @@
     }
     ctx.restore();
   }
-  function blink(phase, period, t){
+  function lidClose(phase, period, t){
     var c = t % period;
     return c < 0.24 ? Math.sin(Math.PI * c / 0.24) : 0;
   }
@@ -338,7 +489,7 @@
       for (var gy = 0; gy < h; gy += 44){ hx.beginPath(); hx.moveTo(0,gy); hx.lineTo(w,gy); hx.stroke(); }
 
       var s = Math.min(w, h) * 0.52;
-      var blink = blink(0, 5.2, t);
+      var blink = lidClose(0, 5.2, t);
       // quick double-blink occasionally
       var c2 = t % 23; if (c2 < 0.5) blink = Math.max(blink, Math.abs(Math.sin(Math.PI * c2 / 0.5)));
       var open = 1 - blink;
@@ -371,7 +522,7 @@
     (function loopNav(){
       var t = performance.now()/1000;
       nx.clearRect(0, 0, 44, 44);
-      drawEye(nx, 22, 22, 34, 1 - blink(0, 6, t), 1, {lw:3});
+      drawEye(nx, 22, 22, 34, 1 - lidClose(0, 6, t), 1, {lw:3});
       requestAnimationFrame(loopNav);
     })();
   }
@@ -384,9 +535,9 @@
       var w = c.width, h = c.height;
       ctx.clearRect(0, 0, w, h);
       if (kind === "calm"){
-        drawEye(ctx, w/2, h/2, w*0.72, 1 - blink(0, 5, t), 1, {});
+        drawEye(ctx, w/2, h/2, w*0.72, 1 - lidClose(0, 5, t), 1, {});
       } else if (kind === "soon"){
-        drawEye(ctx, w/2, h/2, w*0.72, 1 - blink(0, 1.8, t), 1, {});
+        drawEye(ctx, w/2, h/2, w*0.72, 1 - lidClose(0, 1.8, t), 1, {});
       } else if (kind === "due"){
         var pulse = 0.55 + 0.45 * (0.5 + 0.5*Math.sin(t*Math.PI*2/1.3));
         drawEye(ctx, w/2, h/2, w*0.72, 0.45, pulse, {});
