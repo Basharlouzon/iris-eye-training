@@ -13,11 +13,14 @@ xcodebuild archive \
   -allowProvisioningUpdates
 
 echo "▸ Uploading to App Store Connect (TestFlight)…"
+ASC_KEY_ID="${ASC_KEY_ID:-34Y39QQ4Z9}"
+ASC_ISSUER_ID="${ASC_ISSUER_ID:-b56cbc46-54f9-4512-a691-11baccad691e}"
+
 xcodebuild -exportArchive \
   -archivePath build/Iris.xcarchive \
   -exportOptionsPlist ExportOptions-appstore.plist \
-  -authenticationKeyID 34Y39QQ4Z9 \
-  -authenticationKeyIssuerID b56cbc46-54f9-4512-a691-11baccad691e \
+  -authenticationKeyID "$ASC_KEY_ID" \
+  -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
   -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_34Y39QQ4Z9.p8" \
   -allowProvisioningUpdates
 

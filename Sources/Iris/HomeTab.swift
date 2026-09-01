@@ -108,10 +108,10 @@ struct HomeTab: View {
                         .foregroundStyle(Theme.text)
                         .lineLimit(1)
                         .frame(maxWidth: 86, alignment: .leading)
-                    transportButton("backward.fill", 20) { music.previousTrack() }
-                    transportButton(music.isPlaying ? "pause.fill" : "play.fill", 24,
+                    transportButton("backward.fill", 26) { music.previousTrack() }
+                    transportButton(music.isPlaying ? "pause.fill" : "play.fill", 28,
                                     iconColor: .black, background: .white) { music.togglePlayPause() }
-                    transportButton("forward.fill", 20) { music.nextTrack() }
+                    transportButton("forward.fill", 26) { music.nextTrack() }
                 }
                 .padding(.horizontal, 7)
                 .padding(.vertical, 4)
@@ -144,21 +144,21 @@ struct HomeTab: View {
                     Text("BREAK ALERT")
                         .font(.system(size: 9, weight: .bold))
                         .tracking(0.2)
-                        .foregroundStyle(.white.opacity(0.8))
+                        .foregroundStyle(.white)
                     Spacer()
                     Text(alert.date, style: .time)
                         .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.75))
+                        .foregroundStyle(.white)
                 }
                 Text(alert.title)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 Text(alert.message)
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.white)
                 HStack(spacing: 8) {
                     IrisActionButton(title: "Rest \(state.restDuration) sec", style: .quiet) {
-                        state.markAllBreakAlertsDone()
+                        state.markAlertDone(alert.id)
                         state.startRest()
                     }
                     IrisActionButton(title: "Later", style: .restorative) {
@@ -166,9 +166,15 @@ struct HomeTab: View {
                     }
                     Spacer()
                     if state.unreadAlerts.count > 1 {
-                        Text("+\(state.unreadAlerts.count - 1) older")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.6))
+                        Button {
+                            state.markAllBreakAlertsDone()
+                        } label: {
+                            Text("Clear \(state.unreadAlerts.count - 1) older")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .underline()
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.top, 2)
@@ -179,6 +185,7 @@ struct HomeTab: View {
                 LinearGradient(colors: [Theme.gradientTop, Theme.gradientBottom],
                                startPoint: .topLeading, endPoint: .bottomTrailing)
             )
+            .overlay(Color.black.opacity(0.16))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }

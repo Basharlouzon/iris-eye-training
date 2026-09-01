@@ -85,13 +85,6 @@ final class IrisExperienceTests: XCTestCase {
         XCTAssertEqual(TrainingRoutine.approved.totalMinutes, 4)
     }
 
-    func testFreeFirstDefaultsKeepOptionalContextOff() {
-        XCTAssertTrue(IrisFeatureDefaults.adaptiveTiming)
-        XCTAssertTrue(IrisFeatureDefaults.musicSupport)
-        XCTAssertFalse(IrisFeatureDefaults.calendarContext)
-        XCTAssertFalse(IrisFeatureDefaults.focusContext)
-    }
-
     func testNotchedCompactLayoutFitsTheAvailableLip() {
         let layout = CompactLayoutStyle.resolve(hasNotch: true)
 

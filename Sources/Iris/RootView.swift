@@ -88,6 +88,7 @@ struct PillView: View {
     let hasNotch: Bool
 
     @State private var pulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var hoverPeek: CGFloat {
         model.isHovering && !model.isExpanded ? 1.04 : 1.0
@@ -114,8 +115,27 @@ struct PillView: View {
                     .onChange(of: isDue) { pulsing = $0 }
             }
             .onAppear { pulsing = isDue }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(pillA11yLabel(presentation))
             .scaleEffect(hoverPeek, anchor: .bottom)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: hoverPeek)
+        }
+    }
+
+    /// Spoken description of the pill for VoiceOver.
+    private func pillA11yLabel(_ presentation: CompactPresentation) -> String {
+        switch presentation {
+        case .resting:
+            return "Iris, idling"
+        case .breakDue:
+            let n = state.unreadAlerts.count
+            return "Iris, break due now. \(n) unread alert\(n == 1 ? "" : "s"). Click for a \(state.restDuration)-second rest."
+        case .active(let secondsLeft):
+            return "Iris, resting. \(secondsLeft) seconds remaining."
+        case .complete:
+            return "Iris, break complete."
+        case .focus(let secondsLeft):
+            return "Iris, focus block. Next break in \(PillView.format(TimeInterval(secondsLeft)))."
         }
     }
 
@@ -203,9 +223,9 @@ struct PillView: View {
             .foregroundStyle(Theme.panel)
             .frame(width: CGFloat(layout.signalDiameter), height: CGFloat(layout.signalDiameter))
             .background(config.1, in: Circle())
-            .scaleEffect(pulsing && isDue ? 1.16 : 1.0)
+            .scaleEffect(pulsing && isDue && !reduceMotion ? 1.16 : 1.0)
             .animation(
-                .easeInOut(duration: 0.65).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .easeInOut(duration: 0.65).repeatForever(autoreverses: true),
                 value: pulsing && isDue
             )
 

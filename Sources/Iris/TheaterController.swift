@@ -226,6 +226,7 @@ struct TheaterView: View {
     let music: MusicService
 
     @AppStorage(SettingsKeys.musicSupport) private var musicSupport = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var stepCount: Int { max(1, session.queue.count) }
     private var isLast: Bool { session.queueIndex >= stepCount - 1 }
@@ -289,18 +290,25 @@ struct TheaterView: View {
                 HStack(spacing: 8) {
                     // Live run indicator: a dot orbiting the step badge.
                     if session.running {
-                        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
-                            let angle = timeline.date.timeIntervalSinceReferenceDate
-                                .truncatingRemainder(dividingBy: 2.5) / 2.5 * 2 * .pi
+                        if reduceMotion {
+                            // Static dot at the top of the orbit.
                             ZStack {
-                                Circle()
-                                    .stroke(Theme.accent.opacity(0.35), lineWidth: 1.5)
-                                Circle()
-                                    .fill(Theme.accent)
-                                    .frame(width: 4.5, height: 4.5)
-                                    .offset(x: 7 * CGFloat(cos(angle)), y: 7 * CGFloat(sin(angle)))
+                                Circle().stroke(Theme.accent.opacity(0.35), lineWidth: 1.5)
+                                Circle().fill(Theme.accent).frame(width: 4.5, height: 4.5)
+                                    .offset(y: -7)
                             }
                             .frame(width: 17, height: 17)
+                        } else {
+                            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                                let angle = timeline.date.timeIntervalSinceReferenceDate
+                                    .truncatingRemainder(dividingBy: 2.5) / 2.5 * 2 * .pi
+                                ZStack {
+                                    Circle().stroke(Theme.accent.opacity(0.35), lineWidth: 1.5)
+                                    Circle().fill(Theme.accent).frame(width: 4.5, height: 4.5)
+                                        .offset(x: 7 * CGFloat(cos(angle)), y: 7 * CGFloat(sin(angle)))
+                                }
+                                .frame(width: 17, height: 17)
+                            }
                         }
                     }
                     Text("STEP \(session.queueIndex + 1) OF \(stepCount)")

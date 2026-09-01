@@ -25,7 +25,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleDisplayName</key>
     <string>Iris</string>
     <key>CFBundleIdentifier</key>
-    <string>com.basharlouzon.Iris</string>
+    <string>com.basharlouzon.irisblinkeyetraining</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>

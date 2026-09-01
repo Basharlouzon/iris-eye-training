@@ -11,6 +11,7 @@ struct SettingsSheet: View {
     @AppStorage(SettingsKeys.sounds) private var sounds = true
     @AppStorage(SettingsKeys.useFahrenheit) private var useFahrenheit = false
     @AppStorage(SettingsKeys.routinePreset) private var routinePreset = RoutinePreset.balanced.id
+    @State private var customMinutes = Int(UserDefaults.standard.double(forKey: SettingsKeys.breakInterval))
     @AppStorage(SettingsKeys.focusBreaks) private var focusBreaks = true
     @AppStorage(SettingsKeys.showNotchPill) private var showInNotch = false
     @AppStorage(SettingsKeys.musicSupport) private var musicSupport = true
@@ -71,7 +72,7 @@ struct SettingsSheet: View {
                     .foregroundStyle(Theme.tertiary)
 
                     Text("IRIS 1.0 • PRIVATE BY DEFAULT • ALL CORE FEATURES FREE")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.system(size: 9, weight: .medium))
                         .tracking(0.2)
                         .foregroundStyle(Theme.tertiary)
                 }
@@ -83,12 +84,13 @@ struct SettingsSheet: View {
     }
 
     private var routineCard: some View {
-        settingsCard(title: "Your rhythm", detail: "Choose a starting point. Adaptive timing can refine it locally.") {
+        settingsCard(title: "Your rhythm", detail: "Choose a starting point. Change it anytime.") {
             VStack(spacing: 6) {
                 ForEach(RoutinePreset.all) { preset in
                     Button {
                         routinePreset = preset.id
                         breakInterval = Double(preset.focusMinutes)
+                        customMinutes = preset.focusMinutes
                         state.breakIntervalChanged(to: breakInterval)
                     } label: {
                         HStack(spacing: 10) {
@@ -110,8 +112,37 @@ struct SettingsSheet: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                HStack {
+                    Circle()
+                        .fill(isCustomInterval ? Theme.accent : Theme.surfaceStrong)
+                        .frame(width: 8, height: 8)
+                    Text("Custom")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Theme.text)
+                    Spacer()
+                    Stepper(value: $customMinutes, in: 5...180, step: 5) {
+                        Text("\(customMinutes) min")
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Theme.text)
+                            .monospacedDigit()
+                    }
+                    .onChange(of: customMinutes) { newValue in
+                        routinePreset = "custom"
+                        breakInterval = Double(newValue)
+                        state.breakIntervalChanged(to: Double(newValue))
+                    }
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 38)
+                .background(isCustomInterval ? Theme.surfaceStrong : Theme.panel)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
         }
+    }
+
+    private var isCustomInterval: Bool {
+        !RoutinePreset.all.contains { $0.id == routinePreset }
     }
 
     private var intelligenceCard: some View {
@@ -222,7 +253,6 @@ struct SettingsSheet: View {
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .toggleStyle(.switch)
-                .controlSize(.mini)
                 .tint(Theme.accent)
                 .onChange(of: isOn.wrappedValue) { newValue in
                     onChange?(newValue)

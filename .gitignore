@@ -2,3 +2,7 @@
 build/
 *.xcodeproj
 .DS_Store
+
+*.p8
+AuthKey_*
+private_keys/

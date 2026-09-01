@@ -51,8 +51,5 @@ enum SettingsKeys {
     static let routinePreset = "routinePreset"       // String
     static let focusBreaks = "focusBreaks"           // Bool — full-screen break takeover
     static let showNotchPill = "showNotchPill"       // Bool — optional notch pill (menu-bar eye is primary)
-    static let adaptiveTiming = "adaptiveTiming"     // Bool
-    static let calendarContext = "calendarContext"   // Bool
-    static let focusContext = "focusContext"         // Bool
     static let musicSupport = "musicSupport"         // Bool
 }

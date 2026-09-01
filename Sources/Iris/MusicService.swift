@@ -2,13 +2,14 @@ import Foundation
 import SwiftUI
 import AppKit
 
-/// Controls Apple Music. Reads track info and drives playback via AppleScript.
+/// Controls Apple Music. Reads track info and drives playback via AppleScript
+/// executed on a dedicated serial background queue with per-script timeouts, so
+/// a hung Music app or a stalled consent dialog can never freeze the UI.
 ///
-/// Uses NSAppleScript executed on the main thread — this works both in normal
-/// (ad-hoc / Developer ID) builds and inside the App Sandbox for App Store
-/// builds (paired with the com.apple.security.scripting-targets entitlement).
+/// Works inside the App Sandbox (NSAppleScript + the automation entitlement).
 /// First execution triggers the standard macOS "Iris wants to control Music"
-/// consent; denial is surfaced through `denied`.
+/// consent; denial is surfaced through `denied` and only cleared by a
+/// subsequent successful read.
 @MainActor
 final class MusicService: ObservableObject {
     @Published var trackName: String?
@@ -18,6 +19,7 @@ final class MusicService: ObservableObject {
     @Published var denied = false
 
     private var pollTimer: Timer?
+    private let scriptQueue = DispatchQueue(label: "app.iris.applescript", qos: .utility)
 
     private var musicRunning: Bool {
         NSWorkspace.shared.runningApplications.contains { $0.bundleIdentifier == "com.apple.Music" }
@@ -40,17 +42,14 @@ final class MusicService: ObservableObject {
 
     func togglePlayPause() {
         run(#"tell application "Music" to playpause"#)
-        refresh()
     }
 
     func nextTrack() {
         run(#"tell application "Music" to next track"#)
-        refresh()
     }
 
     func previousTrack() {
         run(#"tell application "Music" to previous track"#)
-        refresh()
     }
 
     func refresh() {
@@ -61,35 +60,42 @@ final class MusicService: ObservableObject {
             progress = 0
             return
         }
-        // Note: variable names must avoid Music dictionary terminology
-        // (e.g. `st` is rejected) and radio streams have no duration/position,
-        // so those are read defensively.
-        let output = Self.execute("""
-        tell application "Music"
-            set playerState to (player state as string)
-            set trackTitle to ""
-            set trackArtist to ""
-            set trackPos to ""
-            set trackDur to ""
-            if (exists current track) then
-                set trackTitle to (name of current track)
-                set trackArtist to (artist of current track)
-                try
-                    set trackPos to ((player position) as string)
-                end try
-                try
-                    set trackDur to ((duration of current track) as string)
-                end try
-            end if
-            return (trackTitle & "|" & trackArtist & "|" & playerState & "|" & trackPos & "|" & trackDur)
-        end tell
-        """)
-        apply(Self.parse(output))
+        scriptQueue.async { [weak self] in
+            // Note: variable names must avoid Music dictionary terminology
+            // (e.g. `st` is rejected) and radio streams have no duration or
+            // player position, so those are read defensively.
+            let output = Self.execute("""
+            with timeout of 3 seconds
+                tell application "Music"
+                    set playerState to (player state as string)
+                    set trackTitle to ""
+                    set trackArtist to ""
+                    set trackPos to ""
+                    set trackDur to ""
+                    if (exists current track) then
+                        set trackTitle to (name of current track)
+                        set trackArtist to (artist of current track)
+                        try
+                            set trackPos to ((player position) as string)
+                        end try
+                        try
+                            set trackDur to ((duration of current track) as string)
+                        end try
+                    end if
+                    return (trackTitle & "|" & trackArtist & "|" & playerState & "|" & trackPos & "|" & trackDur)
+                end tell
+            end timeout
+            """)
+            let parsed = Self.parse(output)
+            Task { @MainActor in self?.apply(parsed, readSucceeded: output != nil) }
+        }
     }
 
-    private func apply(_ result: (track: String?, artist: String?, playing: Bool, progress: Double)) {
-        // A successful read means Automation access is working again.
-        if result.track != nil || !result.playing {
+    private func apply(_ result: (track: String?, artist: String?, playing: Bool, progress: Double),
+                       readSucceeded: Bool) {
+        // Only a successful AppleScript read proves Automation access works;
+        // a denial or a timeout must never clear the flag by itself.
+        if readSucceeded {
             denied = false
         }
         trackName = result.track
@@ -110,8 +116,7 @@ final class MusicService: ObservableObject {
         return (track, artist, state == "playing", progress)
     }
 
-    @discardableResult
-    private static func execute(_ source: String) -> String? {
+    nonisolated private static func execute(_ source: String) -> String? {
         guard let script = NSAppleScript(source: source) else { return nil }
         var errorInfo: NSDictionary?
         let descriptor = script.executeAndReturnError(&errorInfo)
@@ -133,6 +138,9 @@ final class MusicService: ObservableObject {
 
     private func run(_ source: String) {
         guard musicRunning else { return }
-        _ = Self.execute(source)
+        scriptQueue.async { [weak self] in
+            _ = Self.execute(source)
+            Task { @MainActor in self?.refresh() }
+        }
     }
 }

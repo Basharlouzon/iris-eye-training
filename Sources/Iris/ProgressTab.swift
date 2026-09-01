@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProgressTab: View {
     @ObservedObject var state: AppState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let snapshot = ProgressSnapshot(
@@ -79,14 +80,15 @@ struct ProgressTab: View {
                                 .fill(day.isToday ? Theme.progress : Theme.surfaceStrong)
                                 .frame(width: 26, height: height)
                             Text(day.label)
-                                .font(.system(size: 8, weight: .medium))
+                                .font(.system(size: 9, weight: .medium))
                                 .foregroundStyle(day.isToday ? Theme.progress : Theme.tertiary)
                         }
                         .frame(maxWidth: .infinity)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: week.map { $0.breaks + $0.exercises })
+                .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8),
+                           value: week.map { $0.breaks + $0.exercises })
             } else {
                 Text("Iris will show a real weekly pattern after seven days of completed activity.")
                     .font(.system(size: 10))

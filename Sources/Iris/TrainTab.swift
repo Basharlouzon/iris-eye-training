@@ -166,9 +166,9 @@ struct TrainTab: View {
             }
         } label: {
             Image(systemName: "play.fill")
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(Theme.accent)
-                .frame(width: 24, height: 24)
+                .frame(width: 28, height: 28)
                 .background(Theme.surfaceStrong, in: Circle())
                 .overlay(Circle().strokeBorder(Theme.accent.opacity(0.4), lineWidth: 1))
         }

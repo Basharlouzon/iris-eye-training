@@ -18,13 +18,13 @@ The current implementation follows the approved Figma showcase in
 - **Today** — a single recommended action, comfort score, focus and distance-break
   metrics, plus optional weather and Music context.
 - **Train** — an approved four-step, four-minute routine powered by the existing
-  animated exercise engine. The complete 11-exercise catalog remains available to
+  animated exercise engine. The complete 12-exercise catalog remains available to
   quick actions and the underlying app.
 - **Progress** — comfort score, reset rate, weekly insight, and a low-pressure rhythm
   chart.
 - **Onboarding** — promise, routine choice, and privacy confirmation. Balanced,
   Gentle, and Classic 20–20–20 routines are included.
-- **Settings** — adaptive timing, break behavior, optional Calendar/Focus/Music
+- **Settings** — , break behavior, optional Calendar/Focus/Music
   context, weather, units, launch at login, and an onboarding reset.
 - **Private by default** — the core routine and progress state stay on-device.
 

@@ -1,5 +1,7 @@
 import SwiftUI
 import Combine
+import UserNotifications
+import CoreGraphics
 
 struct AlertItem: Identifiable, Codable, Equatable {
     var id = UUID()
@@ -40,6 +42,7 @@ final class AppState: ObservableObject {
 
     private var restTimer: Timer?
     private var flashTimer: Timer?
+    private var lastWakeDate: Date?
     private let defaults = UserDefaults.standard
 
     private init() {
@@ -47,6 +50,12 @@ final class AppState: ObservableObject {
         loadStats()
         loadDailyLog()
         scheduler.attach(self)
+        // Track wake so a due break never blind-sides a freshly woken Mac.
+        NotificationCenter.default.addObserver(
+            forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.lastWakeDate = Date() }
+        }
         let minutes = defaults.object(forKey: SettingsKeys.breakInterval) == nil
             ? Double(RoutinePreset.balanced.focusMinutes)
             : defaults.double(forKey: SettingsKeys.breakInterval)
@@ -66,14 +75,54 @@ final class AppState: ObservableObject {
     }
 
     func addBreakAlert() {
+        // The user has been away from the keyboard for a while — their eyes
+        // are already resting. Reschedule quietly instead of interrupting.
+        if userIdleSeconds >= 90 {
+            rescheduleBreak()
+            return
+        }
+        // Straight after the Mac wakes: give them five minutes before the
+        // first takeover.
+        if let wake = lastWakeDate, Date().timeIntervalSince(wake) < 45 {
+            scheduler.rescheduleFromNow(minutes: 5)
+            return
+        }
         addAlert(title: "Time for an eye break",
                  message: "Look farther away for \(restDuration) seconds.")
         if focusBreaksEnabled {
             // The full-screen break IS the notification.
             startRest()
         } else {
+            postBreakNotification()
             let auto = defaults.object(forKey: SettingsKeys.autoExpand) == nil || defaults.bool(forKey: SettingsKeys.autoExpand)
             if auto { NotchPanelController.shared.expandPinned() }
+        }
+    }
+
+    /// Seconds since the last keyboard/pointer input.
+    private var userIdleSeconds: Double {
+        CGEventSource.secondsSinceLastEventType(.combinedSessionState,
+                                                eventType: CGEventType(rawValue: ~0)!)
+    }
+
+    private func rescheduleBreak() {
+        let minutes = defaults.object(forKey: SettingsKeys.breakInterval) == nil
+            ? Double(RoutinePreset.balanced.focusMinutes)
+            : defaults.double(forKey: SettingsKeys.breakInterval)
+        scheduler.rescheduleFromNow(minutes: minutes)
+    }
+
+    /// System notification fallback for when full-screen breaks are off.
+    private func postBreakNotification() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert]) { granted, _ in
+            guard granted else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "Time for an eye break"
+            content.body = "Look at something 20 feet away for \(self.restDuration) seconds."
+            let request = UNNotificationRequest(identifier: UUID().uuidString,
+                                                content: content, trigger: nil)
+            center.add(request)
         }
     }
 

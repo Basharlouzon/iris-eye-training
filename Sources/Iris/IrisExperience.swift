@@ -127,13 +127,6 @@ struct TrainingRoutine: Equatable {
     }
 }
 
-enum IrisFeatureDefaults {
-    static let adaptiveTiming = true
-    static let calendarContext = false
-    static let focusContext = false
-    static let musicSupport = true
-}
-
 struct CompactLayoutStyle: Equatable {
     let showsDetailLine: Bool
     let signalDiameter: Double

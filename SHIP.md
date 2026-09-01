@@ -14,8 +14,8 @@ you, they require your password + 2FA.
 | App Sandbox + entitlements | ✅ `Configuration/Iris.entitlements` (sandbox, Apple Events, network client) |
 | Privacy manifest | ✅ `resources/PrivacyInfo.xcprivacy` (no tracking, no collected data, UserDefaults CA92.1) |
 | Export-compliance | ✅ `ITSAppUsesNonExemptEncryption = false` in Info.plist |
-| Xcode session | ⚠️ **expired** — `basharlouzon@icloud.com` needs re-auth |
-| App Store Connect app record | ❓ unknown — create once if missing |
+| Upload auth | ✅ ASC API key `iris-cli` (34Y39QQ4Z9) installed at `~/.appstoreconnect/private_keys/` |
+| App Store Connect app record | ✅ "Iris — Eye Rest & Training" (6807173748), build 1.0.0(1) uploaded & Ready to Submit |
 | TestFlight public link | ❓ **[you]** after first upload + Beta App Review |
 
 ## Step-by-step
@@ -33,7 +33,7 @@ basharlouzon@icloud.com, missing Xcode-Token`.
 Only needed if "Iris" isn't there yet: [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
 → **Apps → + → New App**
 
-- Name: `Iris` · Language: English · Bundle ID: `com.basharlouzon.Iris`
+- Name: `Iris` · Language: English · Bundle ID: `com.basharlouzon.irisblinkeyetraining`
 - SKU: `iris-1` · Access: Full access
 
 ### 3. Upload
