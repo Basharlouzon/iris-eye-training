@@ -10,6 +10,10 @@
 <meta property="og:image" content="https://basharlouzon.github.io/iris-eye-training/icon.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#050505; --panel:#0c0e0c; --panel2:#121512; --line:rgba(255,255,255,.08);
@@ -198,6 +202,39 @@
   .beta .tx span{color:var(--sub);font-size:12px}
   .beta .spacer{flex:1}
 
+  h1,h2,.brand,.step-num,.rk-btn{font-family:"Space Grotesk",-apple-system,BlinkMacSystemFont,sans-serif}
+
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+  /* ---- rhythm picker ---- */
+  .rk{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;justify-content:center}
+  .rk-btn{border:1px solid var(--line);background:var(--panel);color:var(--sub);
+    padding:11px 18px;border-radius:14px;cursor:pointer;font-size:13.5px;font-weight:600;
+    transition:border-color .15s ease,color .15s ease,transform .15s ease;text-align:left}
+  .rk-btn small{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-top:2px}
+  .rk-btn:hover{border-color:rgba(255,143,42,.4)}
+  .rk-btn.on{border-color:var(--accent);color:var(--text)}
+  .rk-btn.on small{color:var(--accent)}
+  .rk-custom{display:none;align-items:center;gap:12px;margin-top:14px;justify-content:center}
+  .rk-custom.on{display:flex}
+  .rk-custom input[type=range]{width:220px;accent-color:var(--accent)}
+  .rk-custom b{font-family:ui-monospace,monospace;font-size:13px;color:var(--text);min-width:64px}
+
+  /* ---- break takeover (the signature) ---- */
+  #takeover{position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:26px;opacity:0;pointer-events:none;
+    transition:opacity .5s ease}
+  #takeover.on{opacity:1;pointer-events:auto}
+  #takeover .ring{position:relative;width:210px;height:210px}
+  #takeover .ring svg{transform:rotate(-90deg)}
+  #takeover .ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:ui-monospace,monospace;font-size:64px;font-weight:700;color:var(--text)}
+  #takeover h3{font-size:28px;font-weight:800;letter-spacing:-.5px;font-family:"Space Grotesk",sans-serif}
+  #takeover p{color:var(--sub);font-size:14px;max-width:380px;text-align:center;line-height:1.55}
+  #takeover .skip{background:none;border:none;color:var(--dim);font-size:12px;cursor:pointer;
+    text-decoration:underline;text-underline-offset:3px;margin-top:6px}
+  #takeover .skip:hover{color:var(--text)}
+
   /* reveal on scroll */
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
   .reveal.in{opacity:1;transform:none}
@@ -260,6 +297,29 @@
     </div>
     <p class="center reveal" style="color:var(--dim);font-size:12px;margin-top:22px">
       On Macs without a notch, the same pill floats at the top-center — off by default, one toggle in Settings.</p>
+  </div>
+</section>
+
+<section id="try" class="wrap">
+  <div class="center reveal">
+    <span class="kick">Try it</span>
+    <h2>Don't read about breaks.<br><span class="grad">Feel one.</span></h2>
+    <p class="lead" style="margin:0 auto">Pick a rhythm — the button below dims this page for a real
+       Iris break, exactly like the app does on your Mac.</p>
+    <div class="rk" role="group" aria-label="Break rhythm">
+      <button class="rk-btn" data-rk="balanced">Balanced<small>45 min focus · 60 s rest</small></button>
+      <button class="rk-btn" data-rk="gentle">Gentle<small>60 min focus · 45 s rest</small></button>
+      <button class="rk-btn" data-rk="classic">Classic 20-20-20<small>20 min focus · 20 s rest</small></button>
+    </div>
+    <div class="rk-custom" id="rkCustom">
+      <span style="color:var(--sub);font-size:12px">Custom</span>
+      <input type="range" id="rkRange" min="5" max="180" step="5" value="45" aria-label="Custom focus interval in minutes">
+      <b id="rkVal">45 min</b>
+    </div>
+    <p id="rkLine" style="color:var(--sub);font-size:13px;margin-top:16px" aria-live="polite"></p>
+    <button class="btn btn-primary" id="feelBtn" style="margin-top:22px;border:none;cursor:pointer;
+      font-family:inherit">Feel a break now</button>
+    <p style="color:var(--dim);font-size:11.5px;margin-top:12px">Dims this page for the full rest. Esc or Skip ends it early.</p>
   </div>
 </section>
 
@@ -446,6 +506,20 @@
   © 2026 Iris · macOS 13+ · App Sandbox · no tracking
 </footer>
 
+<div id="takeover" role="dialog" aria-modal="true" aria-label="Eye break in progress">
+  <div class="ring">
+    <svg width="210" height="210" viewBox="0 0 210 210">
+      <circle cx="105" cy="105" r="96" stroke="rgba(183,247,122,.15)" stroke-width="5" fill="none"/>
+      <circle id="tkArc" cx="105" cy="105" r="96" stroke="#B7F77A" stroke-width="5" fill="none"
+              stroke-linecap="round" stroke-dasharray="603" stroke-dashoffset="0"/>
+    </svg>
+    <div class="num" id="tkNum">20</div>
+  </div>
+  <h3>Look 20 feet away</h3>
+  <p>Blink slowly and soften your gaze.<br>Your screen comes back on its own.</p>
+  <button class="skip" id="tkSkip">Skip break</button>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -591,7 +665,7 @@
   var drill = document.getElementById("drill");
   if (drill){
     var dctx = drill.getContext("2d");
-    var drills = ["fig8", "zigzag", "circle", "spiral", "diag"];
+    var drills = ["fig8", "inf", "zigzag", "diag", "sweepH", "sweepV", "circle", "rect", "nearfar", "jump", "pulse", "breathe"];
     var names  = {fig8:"FIGURE EIGHT", zigzag:"ZIG-ZAG", circle:"CIRCLE", spiral:"SPIRAL", diag:"DIAGONALS"};
     function P(kind, u, w, h){
       var m = Math.min(w,h)*0.14, W = w - m*2, H = h - m*2, cx = w/2, cy = h/2;
@@ -604,6 +678,20 @@
         case "diag": {var pts=[[m,m],[w-m,h-m],[w-m,m],[m,h-m],[m,m]];
                        return poly(pts,u);}
         case "zigzag":{var rows=5,pp=[];for(var r2=0;r2<=rows;r2++){pp.push([r2%2?w-m:m,m+H*r2/rows]);}return poly(pp,u);}
+        case "sweepH":{var k2=0.5-0.5*Math.cos(2*Math.PI*u);return [m+W*k2, cy];}
+        case "sweepV":{var k3=0.5-0.5*Math.cos(2*Math.PI*u);return [cx, m+H*k3];}
+        case "rect":  return poly([[m+6,m],[w-m-6,m],[w-m-6,h-m],[m+6,h-m],[m+6,m]],u);
+        case "nearfar":{var sk=0.5-0.5*Math.cos(2*Math.PI*u),rf=Math.min(W,H)*0.42,rn=Math.min(W,H)*0.15;
+                        return [cx, cy-(rn+(rf-rn)*sk)];}
+        case "jump":  {var jp=[[m+10,m+10],[w-m-10,m+10],[cx,cy],[m+10,h-m-10],[w-m-10,h-m-10],[cx,m+10]];
+                       var n2=jp.length,sc=u*n2,i3=Math.min(n2-1,Math.floor(sc)),lo=sc-i3;
+                       var aa=jp[i3],bb=jp[(i3+1)%n2];
+                       if(lo<0.6)return aa;
+                       var f3=(lo-0.6)/0.4,e3=f3*f3*(3-2*f3);
+                       return [aa[0]+(bb[0]-aa[0])*e3, aa[1]+(bb[1]-aa[1])*e3];}
+        case "inf":   return [cx + Math.cos(a)*W*0.42, cy + Math.sin(a)*Math.cos(a)*H*0.5];
+        case "pulse": case "breathe": return [cx, cy];
+        default:      return [cx, cy];
       }
       function poly(pts,u2){
         var L=[],T=0,i;
@@ -618,6 +706,11 @@
       }
     }
     var dIdx = 0;
+    window.setDemoDrill = function(i){
+      dIdx = i % drills.length;
+      var cap = drill.parentElement.querySelector(".cap");
+      if (cap) cap.textContent = "LIVE DEMO — " + names[drills[dIdx]];
+    };
     function drawDrill(t){
       var w = drill.width, h = drill.height;
       dctx.clearRect(0, 0, w, h);
@@ -665,6 +758,79 @@
       if (document.hidden){ cancelAnimationFrame(raf); } else if (!reduce){ loop(); }
     });
   }
+
+  /* ---------- feel-a-break takeover + rhythm picker ---------- */
+  var PRESETS = {
+    balanced: {focus: 45, rest: 60, title: "Balanced"},
+    gentle:   {focus: 60, rest: 45, title: "Gentle"},
+    classic:  {focus: 20, rest: 20, title: "Classic 20-20-20"},
+  };
+  var rhythm = JSON.parse(localStorage.getItem("iris-rhythm") || 'null')
+             || {focus: 20, rest: 20, id: "classic"};
+  var tk = document.getElementById("takeover");
+  var tkArc = document.getElementById("tkArc");
+  var tkNum = document.getElementById("tkNum");
+  var CIRC = 603;
+
+  function syncPicker(){
+    document.querySelectorAll(".rk-btn").forEach(function(b){
+      b.classList.toggle("on", b.dataset.rk === rhythm.id);
+    });
+    var custom = !PRESETS[rhythm.id];
+    var cust = document.getElementById("rkCustom");
+    if (cust) cust.classList.toggle("on", custom);
+    var range = document.getElementById("rkRange");
+    if (custom && range){ range.value = rhythm.focus;
+      document.getElementById("rkVal").textContent = rhythm.focus + " min"; }
+    var perDay = Math.round(480 / rhythm.focus);
+    var line = document.getElementById("rkLine");
+    if (line) line.textContent = "≈ " + perDay + " breaks in an 8-hour day · "
+                               + rhythm.rest + " s of rest each.";
+  }
+  document.querySelectorAll(".rk-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      var pr = PRESETS[b.dataset.rk];
+      rhythm = {focus: pr.focus, rest: pr.rest, id: b.dataset.rk};
+      localStorage.setItem("iris-rhythm", JSON.stringify(rhythm));
+      syncPicker();
+    });
+  });
+  var range = document.getElementById("rkRange");
+  if (range) range.addEventListener("input", function(){
+    rhythm = {focus: +range.value, rest: 20, id: "custom"};
+    localStorage.setItem("iris-rhythm", JSON.stringify(rhythm));
+    syncPicker();
+  });
+  syncPicker();
+
+  var tkLeft = 0, tkTotal = 1, tkTimer = null;
+  function startTakeover(seconds){
+    if (tk.classList.contains("on")) return;
+    tkTotal = seconds; tkLeft = seconds + 0.8;
+    tk.classList.add("on");
+    document.body.style.overflow = "hidden";
+    var started = Date.now();
+    tkTimer = setInterval(function(){
+      tkLeft = seconds - (Date.now() - started) / 1000;
+      var frac = Math.max(0, tkLeft / seconds);
+      tkArc.style.strokeDashoffset = CIRC * (1 - frac);
+      tkNum.textContent = Math.max(0, Math.ceil(tkLeft));
+      if (tkLeft <= 0){ endTakeover(); }
+    }, 120);
+  }
+  function endTakeover(){
+    clearInterval(tkTimer); tkTimer = null;
+    tk.classList.remove("on");
+    document.body.style.overflow = "";
+  }
+  document.getElementById("tkSkip").addEventListener("click", endTakeover);
+  addEventListener("keydown", function(e){
+    if (e.key === "Escape" && tk.classList.contains("on")) endTakeover();
+  });
+  var feel = document.getElementById("feelBtn");
+  if (feel) feel.addEventListener("click", function(){ startTakeover(rhythm.rest || 20); });
+
+  /* ---------- clickable drill library ---------- */
 
   /* ---------- library thumbnails: all 12 drills ---------- */
   var libGrid = document.getElementById("libGrid");
@@ -717,9 +883,13 @@
       c2.strokeStyle = style; c2.lineWidth = 1.5;
       c2.beginPath(); c2.arc(x, y, r, 0, 7); c2.stroke();
     }
-    lib.forEach(function(d){
+    lib.forEach(function(d, dIndex){
       var cv = document.createElement("canvas");
       cv.width = 300; cv.height = 200;
+      cv.style.cursor = "pointer";
+      cv.addEventListener("click", function(){
+        if (typeof setDemoDrill === "function") setDemoDrill(dIndex);
+      });
       libGrid.appendChild(cv);
       var c2 = cv.getContext("2d");
       function drawLib(t){
