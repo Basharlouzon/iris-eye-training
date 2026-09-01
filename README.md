@@ -9,6 +9,7 @@ the desk stop ending in strain.
 **Landing page:** `website/index.html` — self-contained (no build step, no
 dependencies), with live canvas ports of the menu-bar eye and the exercise
 trainer.
+**Live:** https://basharlouzon.github.io/iris-eye-training/
 
 ## Features
 
