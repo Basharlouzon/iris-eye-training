@@ -235,6 +235,42 @@
     text-decoration:underline;text-underline-offset:3px;margin-top:6px}
   #takeover .skip:hover{color:var(--text)}
 
+  /* ---- taste pass: asymmetric hero, spotlight cards, tactile press ---- */
+  .hero-inner{display:grid;grid-template-columns:1.02fr 1fr;gap:56px;align-items:center;
+    max-width:1080px;margin:0 auto;padding:0 28px;text-align:left}
+  .hero-copy{text-align:left}
+  .hero-copy h1{font-size:clamp(36px,4.6vw,56px)}
+  .hero-copy .sub{margin:20px 0 0}
+  .hero-copy .cta{margin-top:30px;justify-content:flex-start}
+  .hero-stage{margin:0}
+  @media(max-width:880px){
+    .hero-inner{grid-template-columns:1fr;gap:30px;text-align:center}
+    .hero-copy{text-align:center}
+    .hero-copy .cta{justify-content:center}
+  }
+  .card{position:relative;overflow:hidden}
+  .card::after{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;
+    transition:opacity .3s ease;pointer-events:none;
+    background:radial-gradient(300px circle at var(--mx,50%) var(--my,50%),
+      rgba(255,143,42,.07), transparent 65%)}
+  @media (hover:hover) and (pointer:fine){
+    .card:hover::after{opacity:1}
+  }
+  .btn:active,.rk-btn:active{transform:scale(.97)}
+  .btn,.rk-btn{transition:transform 160ms ease-out,filter 160ms ease-out,opacity 160ms ease-out,
+    border-color 160ms ease,color 160ms ease}
+  .grid > .card{opacity:0;transform:translateY(16px);
+    transition:opacity .55s ease,transform .55s ease,border-color .2s ease}
+  .grid.in > .card{opacity:1;transform:none}
+  .grid.in > .card:nth-child(2){transition-delay:60ms}
+  .grid.in > .card:nth-child(3){transition-delay:120ms}
+  .grid.in > .card:nth-child(4){transition-delay:180ms}
+  .grid.in > .card:nth-child(5){transition-delay:240ms}
+  .grid.in > .card:nth-child(6){transition-delay:300ms}
+  @media (hover:hover) and (pointer:fine){
+    .btn:hover{transform:translateY(-1px)}
+  }
+
   /* reveal on scroll */
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
   .reveal.in{opacity:1;transform:none}
@@ -257,17 +293,22 @@
 </nav>
 
 <header class="hero">
-  <h1>Your eyes deserve a<br><span class="grad">better workday.</span></h1>
-  <p class="sub">Iris is a calm, private coach that lives in your menu bar — timing your breaks,
-     guiding real eye exercises, and telling you when to rest, before your eyes complain.</p>
-  <div class="cta">
-    <a class="btn btn-primary" href="https://github.com/Basharlouzon/iris-eye-training/releases/latest/download/Iris.zip">Download for macOS</a>
-    <a class="btn btn-ghost" href="#features">See how it works</a>
-  </div>
-  <div class="hero-stage">
-    <canvas id="eyeHero" width="860" height="430" role="img"
-            aria-label="An animated almond-shaped eye that blinks and follows your cursor"></canvas>
-    <div class="hero-cap">live · the actual menu-bar eye, rendered</div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="kick">Menu-bar eye care · macOS</span>
+      <h1>Your eyes deserve a <span class="grad">better workday.</span></h1>
+      <p class="sub">Iris is a calm, private coach that lives in your menu bar — timing your breaks,
+         guiding real eye exercises, and telling you when to rest, before your eyes complain.</p>
+      <div class="cta">
+        <a class="btn btn-primary" data-magnetic href="https://github.com/Basharlouzon/iris-eye-training/releases/latest/download/Iris.zip">Download for macOS</a>
+        <a class="btn btn-ghost" href="#features">See how it works</a>
+      </div>
+    </div>
+    <div class="hero-stage">
+      <canvas id="eyeHero" width="860" height="620" role="img"
+              aria-label="An animated almond-shaped eye that blinks and follows your cursor"></canvas>
+      <div class="hero-cap">live · the actual menu-bar eye, rendered</div>
+    </div>
   </div>
 </header>
 
@@ -831,6 +872,28 @@
   if (feel) feel.addEventListener("click", function(){ startTakeover(rhythm.rest || 20); });
 
   /* ---------- clickable drill library ---------- */
+
+  /* ---------- spotlight cards + magnetic CTAs (fine pointers only) ---------- */
+  if (matchMedia("(hover:hover) and (pointer:fine)").matches && !reduce){
+    document.querySelectorAll(".grid .card").forEach(function(card){
+      card.addEventListener("pointermove", function(e){
+        var r = card.getBoundingClientRect();
+        card.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        card.style.setProperty("--my", (e.clientY - r.top) + "px");
+      });
+    });
+    document.querySelectorAll("[data-magnetic]").forEach(function(btn){
+      btn.addEventListener("pointermove", function(e){
+        var r = btn.getBoundingClientRect();
+        var dx = e.clientX - (r.left + r.width/2);
+        var dy = e.clientY - (r.top + r.height/2);
+        btn.style.transform = "translate(" + dx*0.15 + "px," + dy*0.2 + "px)";
+      });
+      btn.addEventListener("pointerleave", function(){
+        btn.style.transform = "";
+      });
+    });
+  }
 
   /* ---------- library thumbnails: all 12 drills ---------- */
   var libGrid = document.getElementById("libGrid");
