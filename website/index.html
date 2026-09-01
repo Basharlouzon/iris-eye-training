@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Iris — eye care in your menu bar</title>
 <meta name="description" content="A calm, private coach for breaks, guided eye training, focus, and long-term eye wellness — living quietly in your menu bar.">
+<meta property="og:title" content="Iris — eye care in your menu bar">
+<meta property="og:description" content="Break reminders, 12 guided eye exercises, full-screen Focus Mode. Private, sandboxed, no account.">
+<meta property="og:image" content="https://basharlouzon.github.io/iris-eye-training/icon.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{
     --bg:#050505; --panel:#0c0e0c; --panel2:#121512; --line:rgba(255,255,255,.08);
@@ -177,6 +182,21 @@
   /* ---- icon in final ---- */
   .icon-final{width:112px;height:112px;border-radius:26px;margin:0 auto 26px;display:block;
     box-shadow:0 30px 60px -20px rgba(255,143,42,.25)}
+
+  /* ---- library strip ---- */
+  .lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px}
+  .lib .th{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+  .lib .th canvas{width:100%;height:auto;display:block;border-radius:8px}
+  .lib .th b{display:block;color:var(--text);font-size:10.5px;font-weight:600;margin-top:7px}
+
+  /* ---- beta strip ---- */
+  .beta{margin-top:44px;background:var(--panel);border:1px solid rgba(255,143,42,.3);border-radius:20px;
+        padding:22px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .beta .tf{width:42px;height:42px;border-radius:11px;background:linear-gradient(180deg,#2a8cff,#0a63d6);
+            display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
+  .beta .tx b{display:block;color:var(--text);font-size:14.5px}
+  .beta .tx span{color:var(--sub);font-size:12px}
+  .beta .spacer{flex:1}
 
   /* reveal on scroll */
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
@@ -367,6 +387,17 @@
       <div class="card"><h3>A library, not a lecture</h3><p>All twelve drills are browseable with live previews —
         play any single one, or run the four-step daily routine.</p></div>
     </div>
+
+    <div class="beta reveal">
+      <span class="tf">TF</span>
+      <div class="tx">
+        <b>TestFlight beta is live</b>
+        <span>Build 1.0.0(2) · macOS 13+ · public link opens after Apple's beta review</span>
+      </div>
+      <span class="spacer"></span>
+      <a class="btn btn-ghost" href="https://github.com/Basharlouzon/iris-eye-training/releases/latest/download/Iris.zip">Download zip meanwhile</a>
+    </div>
+    <div class="lib reveal" id="libGrid"></div>
   </div>
 </section>
 
@@ -632,6 +663,120 @@
     setInterval(function(){ if (!reduce) dIdx = (dIdx + 1) % drills.length; }, 6000);
     addEventListener("visibilitychange", function(){
       if (document.hidden){ cancelAnimationFrame(raf); } else if (!reduce){ loop(); }
+    });
+  }
+
+  /* ---------- library thumbnails: all 12 drills ---------- */
+  var libGrid = document.getElementById("libGrid");
+  if (libGrid){
+    var lib = [
+      {k:"fig8",   n:"Figure Eight"}, {k:"inf",    n:"Infinity"},
+      {k:"zigzag", n:"Zig-Zag"},      {k:"diag",   n:"Diagonals"},
+      {k:"sweepH", n:"Horizontal Sweep"}, {k:"sweepV", n:"Vertical Sweep"},
+      {k:"circle", n:"Circle"},       {k:"rect",   n:"Rectangle"},
+      {k:"nearfar",n:"Near & Far"},   {k:"jump",   n:"Random Jump"},
+      {k:"pulse",  n:"Static Pulse"}, {k:"breathe",n:"Breathing"},
+    ];
+    function lp(kind, u, w, h){
+      var m = 16, W = w - m*2, H = h - m*2, cx = w/2, cy = h/2, a = u*Math.PI*2;
+      function poly(pts){
+        var L=[],T=0,i;
+        for(i=1;i<pts.length;i++){L.push(Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));}
+        for(i=0;i<L.length;i++){T+=L[i];}
+        var tg=u*T;
+        for(i=0;i<L.length;i++){
+          if(tg<=L[i]||i===L.length-1){var f=L[i]?tg/L[i]:0;
+            return [pts[i][0]+(pts[i+1][0]-pts[i][0])*f, pts[i][1]+(pts[i+1][1]-pts[i][1])*f];}
+          tg-=L[i];
+        }
+        return pts[pts.length-1];
+      }
+      switch(kind){
+        case "fig8":    return [cx+Math.sin(2*a)*W*0.34, cy-Math.cos(a)*H*0.40];
+        case "inf":     return [cx+Math.cos(a)*W*0.42,  cy+Math.sin(a)*Math.cos(a)*H*0.5];
+        case "zigzag":  {var pp=[],r=0;for(r=0;r<=5;r++){pp.push([r%2?w-m:m,m+H*r/5]);}return poly(pp,u);}
+        case "diag":    return poly([[m,m],[w-m,h-m],[w-m,m],[m,h-m],[m,m]],u);
+        case "sweepH":  {var k2=0.5-0.5*Math.cos(2*Math.PI*u);return [m+W*k2, cy];}
+        case "sweepV":  {var k3=0.5-0.5*Math.cos(2*Math.PI*u);return [cx, m+H*k3];}
+        case "circle":  return [cx+Math.cos(a)*W*0.36, cy+Math.sin(a)*H*0.36];
+        case "rect":    return poly([[m+6,m],[w-m-6,m],[w-m-6,h-m],[m+6,h-m],[m+6,m]],u);
+        case "nearfar": {var sk=0.5-0.5*Math.cos(2*Math.PI*u),rf=Math.min(W,H)*0.42,rn=Math.min(W,H)*0.15;
+                         return [cx, cy-(rn+(rf-rn)*sk)];}
+        case "jump":    {var jp=[[m+10,m+10],[w-m-10,m+10],[cx,cy],[m+10,h-m-10],[w-m-10,h-m-10],[cx,m+10]];
+                         var n=jp.length,sc=u*n,i2=Math.min(n-1,Math.floor(sc)),lo=sc-i2;
+                         var aa=jp[i2],bb=jp[(i2+1)%n];
+                         if(lo<0.6)return aa;
+                         var f2=(lo-0.6)/0.4,e2=f2*f2*(3-2*f2);
+                         return [aa[0]+(bb[0]-aa[0])*e2, aa[1]+(bb[1]-aa[1])*e2];}
+        case "pulse":   return [cx, cy];
+        case "breathe": return [cx, cy];
+      }
+      return [cx, cy];
+    }
+    function ring(c2, x, y, r, style){
+      c2.strokeStyle = style; c2.lineWidth = 1.5;
+      c2.beginPath(); c2.arc(x, y, r, 0, 7); c2.stroke();
+    }
+    lib.forEach(function(d){
+      var cv = document.createElement("canvas");
+      cv.width = 300; cv.height = 200;
+      libGrid.appendChild(cv);
+      var c2 = cv.getContext("2d");
+      function drawLib(t){
+        var w = cv.width, h = cv.height, m = 16;
+        c2.clearRect(0,0,w,h);
+        c2.strokeStyle = "rgba(255,255,255,.04)"; c2.lineWidth = 1;
+        for (var gx = 0; gx < w; gx += 24){ c2.beginPath(); c2.moveTo(gx,0); c2.lineTo(gx,h); c2.stroke(); }
+        for (var gy = 0; gy < h; gy += 24){ c2.beginPath(); c2.moveTo(0,gy); c2.lineTo(w,gy); c2.stroke(); }
+        if (d.k === "nearfar"){
+          ring(c2, w/2, h/2, Math.min(w,h)*0.34, "rgba(255,255,255,.25)");
+          c2.strokeStyle = "rgba(255,143,42,.5)";
+          c2.beginPath(); c2.arc(w/2, h/2, Math.min(w,h)*0.12, 0, 7); c2.stroke();
+          c2.fillStyle = "rgba(255,255,255,.5)"; c2.font = "700 8px -apple-system";
+          c2.textAlign = "center"; c2.fillText("FAR", w - 26, h*0.28); c2.fillText("NEAR", w - 26, h*0.72);
+        } else if (d.k === "pulse"){
+          [0.16, 0.30, 0.44, 0.58].forEach(function(k, i2){
+            ring(c2, w/2, h/2, Math.min(w,h)/2*k, "rgba(255,143,42," + (0.30 - i2*0.06) + ")");
+          });
+        } else if (d.k === "breathe"){
+          [0.18, 0.38, 0.58, 0.78].forEach(function(k, i2){
+            c2.setLineDash([3,4]);
+            ring(c2, w/2, h/2, Math.min(w,h)/2*k, "rgba(255,255,255," + (0.20 - i2*0.03) + ")");
+            c2.setLineDash([]);
+          });
+        } else if (d.k === "jump"){
+          [[m+10,m+10],[w-m-10,m+10],[w/2,h/2],[m+10,h-m-10],[w-m-10,h-m-10],[w/2,m+10]].forEach(function(pt){
+            c2.strokeStyle = "rgba(255,255,255,.35)"; c2.lineWidth = 1.5;
+            c2.beginPath(); c2.arc(pt[0], pt[1], 5, 0, 7); c2.stroke();
+          });
+        } else {
+          c2.beginPath();
+          for (var i = 0; i <= 120; i++){
+            var p = lp(d.k, i/120, w, h);
+            i ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]);
+          }
+          c2.strokeStyle = "rgba(255,255,255,.25)"; c2.lineWidth = 1.6; c2.stroke();
+        }
+        var ph = (t / 4) % 1;
+        var dp = ExercisePoint(d.k, ph, w, h);
+        var g2 = c2.createRadialGradient(dp[0], dp[1], 1, dp[0], dp[1], 14);
+        g2.addColorStop(0, "rgba(255,143,42,.45)"); g2.addColorStop(1, "rgba(255,143,42,0)");
+        c2.fillStyle = g2; c2.beginPath(); c2.arc(dp[0], dp[1], 14, 0, 7); c2.fill();
+        c2.fillStyle = "#FF8F2A"; c2.beginPath(); c2.arc(dp[0], dp[1], 5, 0, 7); c2.fill();
+        c2.fillStyle = "#fff"; c2.beginPath(); c2.arc(dp[0], dp[1], 1.8, 0, 7); c2.fill();
+      }
+      function ExercisePoint(kind, u, w, h){
+        var nearfar = lp("nearfar", u, w, h);
+        var base = lp(kind === "nearfar" ? "circle" : kind, u, w, h);
+        return kind === "nearfar" ? nearfar : base;
+      }
+      if (reduce){ drawLib(0.4); }
+      else {
+        (function libLoop(){ drawLib(performance.now()/1000); requestAnimationFrame(libLoop); })();
+      }
+      var name = document.createElement("b");
+      name.textContent = d.n;
+      cv.after(name);
     });
   }
 
