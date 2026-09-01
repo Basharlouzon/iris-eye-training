@@ -286,10 +286,28 @@ struct TheaterView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("STEP \(session.queueIndex + 1) OF \(stepCount)")
-                    .font(.system(size: 12, weight: .bold))
-                    .tracking(1.5)
-                    .foregroundStyle(Theme.accent)
+                HStack(spacing: 8) {
+                    // Live run indicator: a dot orbiting the step badge.
+                    if session.running {
+                        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                            let angle = timeline.date.timeIntervalSinceReferenceDate
+                                .truncatingRemainder(dividingBy: 2.5) / 2.5 * 2 * .pi
+                            ZStack {
+                                Circle()
+                                    .stroke(Theme.accent.opacity(0.35), lineWidth: 1.5)
+                                Circle()
+                                    .fill(Theme.accent)
+                                    .frame(width: 4.5, height: 4.5)
+                                    .offset(x: 7 * CGFloat(cos(angle)), y: 7 * CGFloat(sin(angle)))
+                            }
+                            .frame(width: 17, height: 17)
+                        }
+                    }
+                    Text("STEP \(session.queueIndex + 1) OF \(stepCount)")
+                        .font(.system(size: 12, weight: .bold))
+                        .tracking(1.5)
+                        .foregroundStyle(Theme.accent)
+                }
                 Text(session.selected.name)
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(Theme.text)
@@ -468,6 +486,9 @@ struct TheaterView: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
+        .accessibilityLabel(icon.contains("backward") ? "Previous step"
+                            : icon.contains("forward") ? "Next step"
+                            : icon.contains("pause") ? "Pause" : "Start")
     }
 }
 

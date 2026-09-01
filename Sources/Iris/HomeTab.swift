@@ -196,6 +196,15 @@ struct HomeTab: View {
                 .background(background, in: Circle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityName(for: icon))
+    }
+
+    private func accessibilityName(for icon: String) -> String {
+        if icon.contains("backward") { return "Previous track" }
+        if icon.contains("forward") { return "Next track" }
+        if icon.contains("pause") { return "Pause" }
+        if icon.contains("play") { return "Play" }
+        return "Music control"
     }
 
     private var progress: ProgressSnapshot {

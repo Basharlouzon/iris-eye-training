@@ -357,7 +357,7 @@ struct IrisDashboardView: View {
     }
 
     private var panelFooter: some View {
-        Text("Iris 1.0 · rest your eyes, on schedule")
+        Text("Iris 1.0.0 (1) · rest your eyes, on schedule")
             .foregroundStyle(Theme.tertiary)
             .font(.system(size: 9, weight: .medium))
             .tracking(0.2)
